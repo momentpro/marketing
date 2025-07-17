@@ -1,328 +1,290 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>캠페인 빌더 v38.0 (최종 제안)</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
-    <style>
-        body, html {
-            font-family: 'Inter', sans-serif;
-            background-color: #0d0c12;
-            color: #e5e7eb;
-            overflow: hidden;
-            height: 100%;
-            width: 100%;
-        }
-        #arc-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-        }
-        .ui-container {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-        main {
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        footer {
-            flex-shrink: 0;
-        }
-        
-        /* Accordion styles */
-        .accordion-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.4s ease-out, padding 0.4s ease-out;
-            padding-top: 0;
-            padding-bottom: 0;
-        }
-        .accordion-content.open {
-            max-height: 500px; /* 충분한 높이 */
-            padding-top: 0.75rem; /* py-3 */
-            padding-bottom: 0.75rem;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>캠페인 빌더 v38.0 (Three.js AI Background)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #0d0c12;
+      color: #e5e7eb;
+      overflow: hidden;
+      height: 100%;
+      width: 100%;
+    }
+    #three-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+    .ui-container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    main {
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    footer {
+      flex-shrink: 0;
+    }
+    /* Accordion styles */
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease-out, padding 0.4s ease-out;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+    .accordion-content.open {
+      max-height: 500px;
+      padding-top: 0.75rem;
+      padding-bottom: 0.75rem;
+    }
+  </style>
 </head>
 <body>
-    <canvas id="arc-canvas"></canvas>
+  <div id="three-container"></div>
 
-    <div class="ui-container max-w-md mx-auto">
-        <!-- 메인 대시보드 -->
-        <main>
-            <div class="text-center">
-                <p class="text-gray-400 text-lg">예상 도달</p>
-                <p id="total-reach" class="text-7xl font-extrabold text-white transition-all duration-300">0</p>
+  <div class="ui-container max-w-md mx-auto">
+    <!-- 메인 대시보드 -->
+    <main>
+      <div class="text-center">
+        <p class="text-gray-400 text-lg">예상 도달</p>
+        <p id="total-reach" class="text-7xl font-extrabold text-white transition-all duration-300">0</p>
+      </div>
+    </main>
+
+    <!-- 하단 카드 섹션 -->
+    <footer class="px-4 pb-6 pt-4">
+      <div id="accordion-container" class="space-y-3 mb-4">
+        <!-- 아코디언 카드들이 여기에 동적으로 렌더링됩니다. -->
+      </div>
+      <div class="flex justify-between items-center mb-3">
+        <span class="text-gray-400">총 합계 (VAT 별도)</span>
+        <span id="total-price" class="text-xl font-bold text-white">0원</span>
+      </div>
+      <button id="submit-campaign-btn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-full text-base disabled:bg-gray-700 disabled:cursor-not-allowed">
+        캠페인 신청하기
+      </button>
+    </footer>
+  </div>
+
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    // -- Three.js Background Logic --
+    let scene, camera, renderer, particles;
+    const maxParticles = 5000;
+
+    initThree();
+    animateThree();
+
+    function initThree() {
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 60;
+
+      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.getElementById('three-container').appendChild(renderer.domElement);
+
+      window.addEventListener('resize', onWindowResize);
+      createParticles(0);
+    }
+
+    function createParticles(reach) {
+      const reachRatio = Math.min(reach / 150000, 1);
+      const count = Math.floor(reachRatio * maxParticles);
+
+      if (particles) scene.remove(particles);
+      const geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(count * 3);
+
+      for (let i = 0; i < count; i++) {
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        const r = 30;
+
+        positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+        positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+        positions[i * 3 + 2] = r * Math.cos(phi);
+      }
+
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const material = new THREE.PointsMaterial({ size: 0.7, color: 0x80d8ff, transparent: true, opacity: 0.6 });
+      particles = new THREE.Points(geometry, material);
+      scene.add(particles);
+    }
+
+    function animateThree() {
+      requestAnimationFrame(animateThree);
+      if (particles) particles.rotation.y += 0.002;
+      renderer.render(scene, camera);
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function updateGraphic(reach) {
+      createParticles(reach);
+    }
+  </script>
+
+  <script>
+    // -- Campaign Builder Logic --
+    document.addEventListener('DOMContentLoaded', () => {
+      const productsData = {
+        'blog': { name: '네이버 블로그', items: [
+          { id: 'blog-seed', name: '블로그(씨앗)', price: 80000, reach: 1250 },
+          { id: 'blog-sprout', name: '블로그(새싹)', price: 150000, reach: 6000 },
+          { id: 'blog-fruit', name: '블로그(열매)', price: 300000, reach: 15000 },
+        ]},
+        'insta': { name: '인스타그램', items: [
+          { id: 'insta-micro-img', name: '인스타(이미지)', price: 200000, reach: 30000 },
+          { id: 'insta-micro-vid', name: '인스타(숏폼)', price: 450000, reach: 30000 },
+          { id: 'insta-mid-mix', name: '인스타(이미지+숏폼)', price: 1200000, reach: 100000 },
+        ]}
+      };
+
+      const cart = {};
+
+      const totalReachEl = document.getElementById('total-reach');
+      const accordionContainer = document.getElementById('accordion-container');
+      const totalPriceEl = document.getElementById('total-price');
+      const submitBtn = document.getElementById('submit-campaign-btn');
+
+      function renderAccordion() {
+        let html = '';
+        for (const channelId in productsData) {
+          const channel = productsData[channelId];
+          let productHtml = '';
+          channel.items.forEach(product => {
+            const quantity = cart[product.id] || 0;
+            productHtml += `
+              <div class="flex justify-between items-center bg-gray-800 p-3 rounded-lg">
+                <div>
+                  <p class="font-semibold text-white">${product.name}</p>
+                  <p class="text-sm text-gray-400">${product.price.toLocaleString()}원</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <button data-id="${product.id}" class="cart-quantity-change bg-gray-700 rounded-full w-8 h-8 text-xl font-light">-</button>
+                  <span class="font-bold text-white text-lg w-8 text-center">${quantity}</span>
+                  <button data-id="${product.id}" class="cart-quantity-change bg-blue-600 rounded-full w-8 h-8 text-xl font-light">+</button>
+                </div>
+              </div>
+            `;
+          });
+
+          html += `
+            <div class="accordion-item bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+              <button class="accordion-header w-full text-left p-4 flex justify-between items-center">
+                <span class="font-bold text-white">${channel.name}</span>
+                <svg class="w-5 h-5 text-gray-400 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+              <div class="accordion-content px-4 space-y-3">
+                ${productHtml}
+              </div>
             </div>
-        </main>
+          `;
+        }
+        accordionContainer.innerHTML = html;
+        addAccordionListeners();
+      }
 
-        <!-- 하단 카드 섹션 -->
-        <footer class="px-4 pb-6 pt-4">
-            <div id="accordion-container" class="space-y-3 mb-4">
-                <!-- 아코디언 카드들이 여기에 동적으로 렌더링됩니다. -->
-            </div>
-            <div class="flex justify-between items-center mb-3">
-                <span class="text-gray-400">총 합계 (VAT 별도)</span>
-                <span id="total-price" class="text-xl font-bold text-white">0원</span>
-            </div>
-            <button id="submit-campaign-btn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-full text-base disabled:bg-gray-700 disabled:cursor-not-allowed">
-                캠페인 신청하기
-            </button>
-        </footer>
-    </div>
+      let animationFrameId;
+      function animateMainReach(endValue) {
+        const startValue = parseInt(totalReachEl.textContent.replace(/,/g, '')) || 0;
+        if (startValue === endValue) return;
+        const duration = 1000;
+        let startTime = null;
+        function step(timestamp) {
+          if (!startTime) startTime = timestamp;
+          const progress = Math.min((timestamp - startTime) / duration, 1);
+          const currentValue = Math.floor(progress * (endValue - startValue) + startValue);
+          totalReachEl.textContent = currentValue.toLocaleString();
+          if (progress < 1) animationFrameId = requestAnimationFrame(step);
+        }
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = requestAnimationFrame(step);
+      }
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- Processing Arc Canvas Logic ---
-            const canvas = document.getElementById('arc-canvas');
-            const ctx = canvas.getContext('2d');
-            
-            let targetProgress = 0;
-            let currentProgress = 0;
-            let orbRotation = 0;
-
-            function resizeCanvas() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
+      function updateTotals() {
+        let totalPrice = 0;
+        let totalReach = 0;
+        for (const channelId in productsData) {
+          productsData[channelId].items.forEach(product => {
+            if (cart[product.id]) {
+              totalPrice += product.price * cart[product.id];
+              totalReach += product.reach * cart[product.id];
             }
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
+          });
+        }
+        totalPriceEl.textContent = `${totalPrice.toLocaleString()}원`;
+        submitBtn.disabled = totalPrice === 0;
+        animateMainReach(totalReach);
+        updateGraphic(totalReach);
+      }
 
-            function updateGraphic(reach) {
-                // Lower maxReach for higher sensitivity
-                const maxReach = 150000; 
-                const reachRatio = Math.min(reach / maxReach, 1);
-                targetProgress = reachRatio;
-            }
-
-            function draw() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                currentProgress += (targetProgress - currentProgress) * 0.05;
-
-                const centerX = canvas.width / 2;
-                const centerY = canvas.height / 2;
-                const radius = canvas.width * 0.9;
-                
-                // Draw Top Arc
-                if (currentProgress > 0.01) {
-                    const arcStartAngle = Math.PI * 1.2;
-                    const arcEndAngle = Math.PI * 1.8;
-                    const currentAngle = arcStartAngle + (arcEndAngle - arcStartAngle) * currentProgress;
-
-                    const grad = ctx.createLinearGradient(centerX - radius, centerY, centerX + radius, centerY);
-                    grad.addColorStop(0, '#60a5fa'); // blue-400
-                    grad.addColorStop(0.5, '#f472b6'); // pink-400
-                    grad.addColorStop(1, '#fb923c'); // orange-400
-
-                    ctx.beginPath();
-                    ctx.arc(centerX, canvas.height * 0.85, radius, arcStartAngle, currentAngle);
-                    ctx.strokeStyle = grad;
-                    ctx.lineWidth = 8;
-                    ctx.lineCap = 'round';
-                    ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
-                    ctx.shadowBlur = 20;
-                    ctx.stroke();
-                    ctx.shadowBlur = 0;
-                }
-
-                // Draw Bottom Arc
-                if (currentProgress > 0.01) {
-                    const arcStartAngle = Math.PI * 0.2;
-                    const arcEndAngle = Math.PI * 0.8;
-                    const currentAngle = arcStartAngle + (arcEndAngle - arcStartAngle) * currentProgress;
-                    
-                    const grad = ctx.createLinearGradient(centerX - radius, centerY, centerX + radius, centerY);
-                    grad.addColorStop(0, '#fb923c'); // orange-400
-                    grad.addColorStop(0.5, '#f472b6'); // pink-400
-                    grad.addColorStop(1, '#60a5fa'); // blue-400
-
-                    ctx.beginPath();
-                    // Position the bottom arc relative to the top of the canvas
-                    ctx.arc(centerX, canvas.height * 0.15, radius, arcStartAngle, currentAngle);
-                    ctx.strokeStyle = grad;
-                    ctx.lineWidth = 8;
-                    ctx.lineCap = 'round';
-                    ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
-                    ctx.shadowBlur = 20;
-                    ctx.stroke();
-                    ctx.shadowBlur = 0;
-                }
-
-
-                // Draw Orb
-                const orbRadius = 15;
-                const orbPathRadius = 40;
-                orbRotation += 0.01;
-                const orbX = centerX + Math.cos(orbRotation) * orbPathRadius;
-                const orbY = canvas.height * 0.2 + Math.sin(orbRotation * 2) * 5;
-
-                const orbGrad = ctx.createLinearGradient(orbX - orbRadius, orbY - orbRadius, orbX + orbRadius, orbY + orbRadius);
-                orbGrad.addColorStop(0, '#f87171'); // red-400
-                orbGrad.addColorStop(1, '#60a5fa'); // blue-400
-                
-                ctx.beginPath();
-                ctx.arc(orbX, orbY, orbRadius, 0, Math.PI * 2);
-                ctx.fillStyle = orbGrad;
-                ctx.fill();
-
-
-                requestAnimationFrame(draw);
-            }
-            draw();
-
-            // --- Campaign Builder Logic ---
-            const productsData = {
-                'blog': { name: '네이버 블로그', items: [
-                    { id: 'blog-seed', name: '블로그(씨앗)', price: 80000, reach: 1250 },
-                    { id: 'blog-sprout', name: '블로그(새싹)', price: 150000, reach: 6000 },
-                    { id: 'blog-fruit', name: '블로그(열매)', price: 300000, reach: 15000 },
-                ]},
-                'insta': { name: '인스타그램', items: [
-                    { id: 'insta-micro-img', name: '인스타(이미지)', price: 200000, reach: 30000 },
-                    { id: 'insta-micro-vid', name: '인스타(숏폼)', price: 450000, reach: 30000 },
-                    { id: 'insta-mid-mix', name: '인스타(이미지+숏폼)', price: 1200000, reach: 100000 },
-                ]}
-            };
-
-            const cart = {};
-
-            const totalReachEl = document.getElementById('total-reach');
-            const accordionContainer = document.getElementById('accordion-container');
-            const totalPriceEl = document.getElementById('total-price');
-            const submitBtn = document.getElementById('submit-campaign-btn');
-            
-            function renderAccordion() {
-                let html = '';
-                for (const channelId in productsData) {
-                    const channel = productsData[channelId];
-                    let productHtml = '';
-                    channel.items.forEach(product => {
-                        const quantity = cart[product.id] || 0;
-                        productHtml += `
-                            <div class="flex justify-between items-center bg-gray-800 p-3 rounded-lg">
-                                <div>
-                                    <p class="font-semibold text-white">${product.name}</p>
-                                    <p class="text-sm text-gray-400">${product.price.toLocaleString()}원</p>
-                                </div>
-                                <div class="flex items-center space-x-3">
-                                    <button data-id="${product.id}" class="cart-quantity-change bg-gray-700 rounded-full w-8 h-8 text-xl font-light">-</button>
-                                    <span class="font-bold text-white text-lg w-8 text-center">${quantity}</span>
-                                    <button data-id="${product.id}" class="cart-quantity-change bg-blue-600 rounded-full w-8 h-8 text-xl font-light">+</button>
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    html += `
-                        <div class="accordion-item bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
-                            <button class="accordion-header w-full text-left p-4 flex justify-between items-center">
-                                <span class="font-bold text-white">${channel.name}</span>
-                                <svg class="w-5 h-5 text-gray-400 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                            </button>
-                            <div class="accordion-content px-4 space-y-3">
-                                ${productHtml}
-                            </div>
-                        </div>
-                    `;
-                }
-                accordionContainer.innerHTML = html;
-                addAccordionListeners();
-            }
-
-            let animationFrameId;
-            function animateMainReach(endValue) {
-                const startValue = parseInt(totalReachEl.textContent.replace(/,/g, '')) || 0;
-                if (startValue === endValue) return;
-                const duration = 1000;
-                let startTime = null;
-                function step(timestamp) {
-                    if (!startTime) startTime = timestamp;
-                    const progress = Math.min((timestamp - startTime) / duration, 1);
-                    const currentValue = Math.floor(progress * (endValue - startValue) + startValue);
-                    totalReachEl.textContent = currentValue.toLocaleString();
-                    if (progress < 1) animationFrameId = requestAnimationFrame(step);
-                }
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = requestAnimationFrame(step);
-            }
-
-            function updateTotals() {
-                let totalPrice = 0;
-                let totalReach = 0;
-                for (const channelId in productsData) {
-                    productsData[channelId].items.forEach(product => {
-                        if (cart[product.id]) {
-                            totalPrice += product.price * cart[product.id];
-                            totalReach += product.reach * cart[product.id];
-                        }
-                    });
-                }
-                totalPriceEl.textContent = `${totalPrice.toLocaleString()}원`;
-                submitBtn.disabled = totalPrice === 0;
-                animateMainReach(totalReach);
-                updateGraphic(totalReach);
-            }
-
-            function addAccordionListeners() {
-                const headers = document.querySelectorAll('.accordion-header');
-                headers.forEach(header => {
-                    header.addEventListener('click', () => {
-                        const content = header.nextElementSibling;
-                        const icon = header.querySelector('svg');
-                        
-                        document.querySelectorAll('.accordion-content.open').forEach(openContent => {
-                            if (openContent !== content) {
-                                openContent.classList.remove('open');
-                                openContent.previousElementSibling.querySelector('svg').classList.remove('rotate-180');
-                            }
-                        });
-
-                        content.classList.toggle('open');
-                        icon.classList.toggle('rotate-180');
-                    });
-                });
-
-                const quantityButtons = document.querySelectorAll('.cart-quantity-change');
-                quantityButtons.forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const id = btn.dataset.id;
-                        const operation = btn.textContent;
-                        
-                        if (operation === '+') {
-                            if ((cart[id] || 0) < 100) {
-                                cart[id] = (cart[id] || 0) + 1;
-                            }
-                        } else if (operation === '-') {
-                            if (cart[id] && cart[id] > 0) {
-                                cart[id]--;
-                                if (cart[id] === 0) delete cart[id];
-                            }
-                        }
-                        
-                        const quantitySpan = btn.parentElement.querySelector('span');
-                        quantitySpan.textContent = cart[id] || 0;
-                        updateTotals();
-                    });
-                });
-            }
-
-            renderAccordion();
-            updateTotals();
+      function addAccordionListeners() {
+        const headers = document.querySelectorAll('.accordion-header');
+        headers.forEach(header => {
+          header.addEventListener('click', () => {
+            const content = header.nextElementSibling;
+            const icon = header.querySelector('svg');
+            document.querySelectorAll('.accordion-content.open').forEach(openContent => {
+              if (openContent !== content) {
+                openContent.classList.remove('open');
+                openContent.previousElementSibling.querySelector('svg').classList.remove('rotate-180');
+              }
+            });
+            content.classList.toggle('open');
+            icon.classList.toggle('rotate-180');
+          });
         });
-    </script>
+
+        const quantityButtons = document.querySelectorAll('.cart-quantity-change');
+        quantityButtons.forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            const operation = btn.textContent;
+            if (operation === '+') {
+              if ((cart[id] || 0) < 100) cart[id] = (cart[id] || 0) + 1;
+            } else {
+              if (cart[id] && cart[id] > 0) {
+                cart[id]--;
+                if (cart[id] === 0) delete cart[id];
+              }
+            }
+            btn.parentElement.querySelector('span').textContent = cart[id] || 0;
+            updateTotals();
+          });
+        });
+      }
+
+      renderAccordion();
+      updateTotals();
+    });
+  </script>
 </body>
 </html>
