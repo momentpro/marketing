@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>캠페인 빌더 v26.0 (최종 개선안)</title>
+    <title>캠페인 빌더 v36.0 (최종 제안)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter -->
@@ -17,7 +17,7 @@
             height: 100%;
             width: 100%;
         }
-        #sphere-canvas {
+        #light-canvas {
             position: fixed;
             top: 50%;
             left: 50%;
@@ -25,6 +25,7 @@
             width: 100%;
             height: 100%;
             z-index: 0;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .ui-container {
             position: relative;
@@ -38,6 +39,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
         footer {
             flex-shrink: 0;
@@ -59,11 +61,11 @@
     </style>
 </head>
 <body>
-    <canvas id="sphere-canvas"></canvas>
+    <canvas id="light-canvas"></canvas>
 
     <div class="ui-container max-w-md mx-auto">
         <!-- 메인 대시보드 -->
-        <main>
+        <main id="main-content">
             <div class="text-center">
                 <p class="text-gray-400 text-lg">예상 도달</p>
                 <p id="total-reach" class="text-7xl font-extrabold text-white transition-all duration-300">0</p>
@@ -87,18 +89,12 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- Connecting Sphere Canvas Logic ---
-            const canvas = document.getElementById('sphere-canvas');
+            // --- Convergence Light Canvas Logic ---
+            const canvas = document.getElementById('light-canvas');
             const ctx = canvas.getContext('2d');
             
-            let points = [];
-            const numPoints = 2500;
-            let beams = [];
             let targetIntensity = 0;
             let currentIntensity = 0;
-            let targetLineCount = 0;
-            let rotationX = 0;
-            let rotationY = 0;
             let time = 0;
 
             function resizeCanvas() {
@@ -108,121 +104,86 @@
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
 
-            // Create points on a sphere
-            for (let i = 0; i < numPoints; i++) {
-                const phi = Math.acos(-1 + (2 * i) / numPoints);
-                const theta = Math.sqrt(numPoints * Math.PI) * phi;
-                points.push({
-                    x: Math.cos(theta) * Math.sin(phi),
-                    y: Math.sin(theta) * Math.sin(phi),
-                    z: Math.cos(phi)
-                });
-            }
-
-            class Beam {
-                constructor(startIndex, endIndex) {
-                    this.startIndex = startIndex;
-                    this.endIndex = endIndex;
-                }
-                draw(projectedPoints) {
-                    const p1 = projectedPoints[this.startIndex];
-                    const p2 = projectedPoints[this.endIndex];
-                    if (!p1 || !p2) return;
-
-                    ctx.beginPath();
-                    ctx.moveTo(p1.x, p1.y);
-                    ctx.lineTo(p2.x, p2.y);
-                    
-                    // Use the color of the starting point for the line
-                    const lineOpacity = currentIntensity * 0.4;
-                    const lineColor = p1.color.replace(/, [0-9\.]+\)/, `, ${lineOpacity})`);
-                    
-                    ctx.strokeStyle = lineColor;
-                    ctx.lineWidth = 1.2;
-                    ctx.stroke();
-                }
-            }
-
-            function updateSphere(reach) {
-                // Set maxReach to 300,000 for higher sensitivity
-                const maxReach = 300000; 
-                const maxLines = 800;
-                const reachRatio = Math.pow(Math.min(reach / maxReach, 1), 0.6);
-                
+            function updateGraphic(reach) {
+                const maxReach = 300000;
+                const reachRatio = Math.pow(Math.min(reach / maxReach, 1), 0.5);
                 targetIntensity = reachRatio;
-                targetLineCount = Math.floor(reachRatio * maxLines);
             }
 
-            function drawSphere() {
+            function draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                const radius = Math.min(canvas.width, canvas.height) * 0.3;
-                const fov = 300;
-                
                 currentIntensity += (targetIntensity - currentIntensity) * 0.05;
-                rotationX += 0.001;
-                rotationY += 0.0005;
-                time += 0.02;
+                time += 0.01;
 
-                const projectedPoints = points.map(p => {
-                    const deformation = Math.sin(p.y * 5 + time) * Math.cos(p.x * 5 + time) * 0.1 * currentIntensity;
-                    const r = 1 + deformation;
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const sphereRadius = Math.min(canvas.width, canvas.height) * 0.8;
+                const gap = 8; // Fixed gap between spheres
 
-                    const cosX = Math.cos(rotationX);
-                    const sinX = Math.sin(rotationX);
-                    const cosY = Math.cos(rotationY);
-                    const sinY = Math.sin(rotationY);
-
-                    const y1 = p.y * cosX - p.z * sinX;
-                    const z1 = p.y * sinX + p.z * cosX;
-                    const x1 = p.x * cosY - z1 * sinY;
-                    const z2 = p.x * sinY + z1 * cosY;
-
-                    const scale = fov / (fov + z2 * radius);
-                    const px = x1 * r * radius * scale + canvas.width / 2;
-                    const py = y1 * r * radius * scale + canvas.height / 2;
-                    
-                    const brightness = Math.max(0, (p.z + 1) / 2);
-                    const hue = 260 + brightness * 60 - currentIntensity * 60;
-                    const lightness = 60 + brightness * 30 * currentIntensity;
-                    const alpha = 0.3 + brightness * 0.7 * currentIntensity;
-                    const color = `hsla(${hue}, 100%, ${lightness}%, ${alpha})`;
-                    
-                    return { x: px, y: py, z: z2, scale: scale, color: color };
-                });
+                const arcLength = 0.15 + 0.4 * currentIntensity;
+                const mainLineWidth = 4 + 12 * currentIntensity;
+                const subLineWidth = 1 + 2 * currentIntensity;
                 
-                // Adjust beam array to match target count
-                while (beams.length < targetLineCount) {
-                    const startIndex = Math.floor(Math.random() * numPoints);
-                    let endIndex = Math.floor(Math.random() * numPoints);
-                    while (endIndex === startIndex) {
-                        endIndex = Math.floor(Math.random() * numPoints);
-                    }
-                    beams.push(new Beam(startIndex, endIndex));
-                }
-                while (beams.length > targetLineCount) {
-                    beams.shift(); // Remove oldest beams
+                // Draw Arcs
+                ctx.lineCap = 'round';
+                
+                // Top Arc
+                drawArcSet(centerX, centerY - sphereRadius + gap, sphereRadius, 0.5 * Math.PI - arcLength, 0.5 * Math.PI + arcLength, mainLineWidth, subLineWidth);
+                
+                // Bottom Arc
+                drawArcSet(centerX, centerY + sphereRadius - gap, sphereRadius, 1.5 * Math.PI - arcLength, 1.5 * Math.PI + arcLength, mainLineWidth, subLineWidth);
+                
+                // Draw Central Light
+                if (currentIntensity > 0.01) {
+                    const lightHeight = (gap + 60) * currentIntensity;
+                    const centralLightGrad = ctx.createLinearGradient(centerX, centerY - lightHeight, centerX, centerY + lightHeight);
+                    centralLightGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+                    centralLightGrad.addColorStop(0.45, `rgba(255, 255, 255, ${currentIntensity})`);
+                    centralLightGrad.addColorStop(0.55, `rgba(255, 255, 255, ${currentIntensity})`);
+                    centralLightGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                    
+                    ctx.strokeStyle = centralLightGrad;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY - lightHeight);
+                    ctx.lineTo(centerX, centerY + lightHeight);
+                    ctx.stroke();
+
+                    // Central glow
+                    const coreGlowGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 70 * currentIntensity);
+                    coreGlowGrad.addColorStop(0, `rgba(255, 255, 255, ${0.9 * currentIntensity})`);
+                    coreGlowGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                    ctx.fillStyle = coreGlowGrad;
+                    ctx.fillRect(centerX - 70, centerY - 70, 140, 140);
                 }
 
-                // Draw beams
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = 'rgba(200, 200, 255, 0.3)';
-                beams.forEach(beam => beam.draw(projectedPoints));
+                requestAnimationFrame(draw);
+            }
+
+            function drawArcSet(x, y, radius, startAngle, endAngle, mainWidth, subWidth) {
+                // Main bright arc
+                const mainGrad = ctx.createLinearGradient(x - radius, y, x + radius, y);
+                mainGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+                mainGrad.addColorStop(0.5, `rgba(255, 255, 255, ${0.6 + 0.4 * currentIntensity})`);
+                mainGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.lineWidth = mainWidth;
+                ctx.strokeStyle = mainGrad;
+                ctx.shadowColor = 'rgba(200, 220, 255, 0.5)';
+                ctx.shadowBlur = 20 * currentIntensity;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, startAngle, endAngle);
+                ctx.stroke();
                 ctx.shadowBlur = 0;
 
-
-                // Draw points
-                projectedPoints.forEach(p => {
-                    if (p.x < 0 || p.x > canvas.width || p.y < 0 || p.y > canvas.height) return;
-                    
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.scale * 1.2, 0, Math.PI * 2);
-                    ctx.fillStyle = p.color;
-                    ctx.fill();
-                });
-
-                requestAnimationFrame(drawSphere);
+                // Thinner, sharper outline
+                ctx.lineWidth = subWidth;
+                ctx.strokeStyle = `rgba(230, 230, 255, ${0.2 + 0.3 * currentIntensity})`;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, startAngle, endAngle);
+                ctx.stroke();
             }
-            drawSphere();
+            
+            draw();
 
             // --- Campaign Builder Logic ---
             const productsData = {
@@ -244,6 +205,8 @@
             const accordionContainer = document.getElementById('accordion-container');
             const totalPriceEl = document.getElementById('total-price');
             const submitBtn = document.getElementById('submit-campaign-btn');
+            const mainContent = document.getElementById('main-content');
+            const lightCanvas = document.getElementById('light-canvas');
             
             function renderAccordion() {
                 let html = '';
@@ -314,7 +277,7 @@
                 totalPriceEl.textContent = `${totalPrice.toLocaleString()}원`;
                 submitBtn.disabled = totalPrice === 0;
                 animateMainReach(totalReach);
-                updateSphere(totalReach);
+                updateGraphic(totalReach);
             }
 
             function addAccordionListeners() {
@@ -323,16 +286,22 @@
                     header.addEventListener('click', () => {
                         const content = header.nextElementSibling;
                         const icon = header.querySelector('svg');
+                        const wasOpen = content.classList.contains('open');
                         
                         document.querySelectorAll('.accordion-content.open').forEach(openContent => {
-                            if (openContent !== content) {
-                                openContent.classList.remove('open');
-                                openContent.previousElementSibling.querySelector('svg').classList.remove('rotate-180');
-                            }
+                            openContent.classList.remove('open');
+                            openContent.previousElementSibling.querySelector('svg').classList.remove('rotate-180');
                         });
 
-                        content.classList.toggle('open');
-                        icon.classList.toggle('rotate-180');
+                        if (!wasOpen) {
+                            content.classList.add('open');
+                            icon.classList.add('rotate-180');
+                        }
+                        
+                        // Check if any accordion is open
+                        const anyOpen = document.querySelector('.accordion-content.open');
+                        mainContent.style.transform = `translateY(${anyOpen ? '-96px' : '0px'})`;
+                        lightCanvas.style.transform = `translate(-50%, -50%) ${anyOpen ? 'translateY(-96px)' : ''}`;
                     });
                 });
 
