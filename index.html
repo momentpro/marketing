@@ -111,97 +111,96 @@
   <!-- Three.js & 3D 배경 스크립트 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
-    let scene, camera, renderer, stars, backgroundSphere;
-    let starGeo, starMat;
-    const STAR_COUNT = 20000;
-
-    initScene();
-    animate();
-
-    function initScene() {
-      scene = new THREE.Scene();
-
-      // 카메라
-      camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 3000);
-      camera.position.z = 500;
-
-      // 렌더러
-      renderer = new THREE.WebGLRenderer({ alpha:true, antialias:true });
-      renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      document.getElementById('three-container').appendChild(renderer.domElement);
-
-      window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth/window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      });
-
-      // JWST 딥필드 배경
-      new THREE.TextureLoader().load(
-        'https://cdn.spacetelescope.org/archives/images/publicationjpg/heic2002a.jpg',
-        tex => {
-          const mat = new THREE.MeshBasicMaterial({ map:tex, side:THREE.BackSide });
-          const geo = new THREE.SphereGeometry(1000, 60, 60);
-          backgroundSphere = new THREE.Mesh(geo, mat);
-          scene.add(backgroundSphere);
-        }
-      );
-
-      // 별 포인트
-      starGeo = new THREE.BufferGeometry();
-      const positions = new Float32Array(STAR_COUNT*3);
-      for(let i=0;i<STAR_COUNT;i++){
-        positions[i*3]   = (Math.random()-0.5)*2000;
-        positions[i*3+1] = (Math.random()-0.5)*2000;
-        positions[i*3+2] = (Math.random()-0.5)*2000;
-      }
-      starGeo.setAttribute('position', new THREE.BufferAttribute(positions,3));
-      starGeo.setDrawRange(0,0);
-
-      const sprite = new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/star.png');
-      starMat = new THREE.PointsMaterial({
-        map: sprite,
-        size: 2,
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        opacity: 0.5
-      });
-
-      stars = new THREE.Points(starGeo, starMat);
-      scene.add(stars);
-    }
-
-    function animate() {
-      // 예상 도달 값 연동
-      const reach = parseInt(
-        document.getElementById('total-reach').textContent.replace(/,/g,'')) || 0;
-      let ratio = Math.min(reach/150000,1);
-      ratio = Math.pow(ratio,0.5) * 1.8;  // 감도 조정
-      ratio = Math.min(ratio,1);
-
-      // 최소 20% 보장
-      const eff = Math.max(ratio,0.2);
-
-      // 별 개수, 크기, 불투명도
-      starGeo.setDrawRange(0, Math.floor(STAR_COUNT * eff));
-      starMat.opacity = 0.3 + 0.7 * ratio;
-      starMat.size    = 2 + 8 * ratio;
-
-      // 회전
-      stars.rotation.y += 0.0007;
-      stars.rotation.x += 0.0004;
-      if(backgroundSphere) backgroundSphere.rotation.y += 0.0001;
-
-      renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    }
-  </script>
-
-  <!-- Campaign Builder Logic (unchanged) -->
-  <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // Three.js 배경
+      let scene, camera, renderer, stars, backgroundSphere;
+      let starGeo, starMat;
+      const STAR_COUNT = 20000;
+
+      initScene();
+      animate();
+
+      function initScene() {
+        scene = new THREE.Scene();
+
+        // 카메라
+        camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 3000);
+        camera.position.z = 500;
+
+        // 렌더러
+        renderer = new THREE.WebGLRenderer({ alpha:true, antialias:true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('three-container').appendChild(renderer.domElement);
+
+        window.addEventListener('resize', () => {
+          camera.aspect = window.innerWidth/window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // JWST 딥필드 배경
+        new THREE.TextureLoader().load(
+          'https://cdn.spacetelescope.org/archives/images/publicationjpg/heic2002a.jpg',
+          tex => {
+            const mat = new THREE.MeshBasicMaterial({ map:tex, side:THREE.BackSide });
+            const geo = new THREE.SphereGeometry(1000, 60, 60);
+            backgroundSphere = new THREE.Mesh(geo, mat);
+            scene.add(backgroundSphere);
+          }
+        );
+
+        // 별 포인트
+        starGeo = new THREE.BufferGeometry();
+        const positions = new Float32Array(STAR_COUNT*3);
+        for(let i=0;i<STAR_COUNT;i++){
+          positions[i*3]   = (Math.random()-0.5)*2000;
+          positions[i*3+1] = (Math.random()-0.5)*2000;
+          positions[i*3+2] = (Math.random()-0.5)*2000;
+        }
+        starGeo.setAttribute('position', new THREE.BufferAttribute(positions,3));
+        starGeo.setDrawRange(0,0);
+
+        const sprite = new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/star.png');
+        starMat = new THREE.PointsMaterial({
+          map: sprite,
+          size: 2,
+          transparent: true,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          opacity: 0.5
+        });
+
+        stars = new THREE.Points(starGeo, starMat);
+        scene.add(stars);
+      }
+
+      function animate() {
+        // 예상 도달 값 연동
+        const reach = parseInt(
+          document.getElementById('total-reach').textContent.replace(/,/g,'')) || 0;
+        let ratio = Math.min(reach/150000,1);
+        ratio = Math.pow(ratio,0.5) * 1.8;  // 감도 조정
+        ratio = Math.min(ratio,1);
+
+        // 최소 20% 보장
+        const eff = Math.max(ratio,0.2);
+
+        // 별 개수, 크기, 불투명도
+        starGeo.setDrawRange(0, Math.floor(STAR_COUNT * eff));
+        starMat.opacity = 0.3 + 0.7 * ratio;
+        starMat.size    = 2 + 8 * ratio;
+
+        // 회전
+        stars.rotation.y += 0.0007;
+        stars.rotation.x += 0.0004;
+        if(backgroundSphere) backgroundSphere.rotation.y += 0.0001;
+
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+      }
+
+      // Campaign Builder Logic
       const productsData = {
         'blog': {
           name: '네이버 블로그',
@@ -291,11 +290,16 @@
         });
         document.querySelectorAll('.cart-quantity-change').forEach(btn => {
           btn.addEventListener('click', e => {
-            e.stopPropagation();
+            e.stopPropagation();  // 팝업 닫히지 않음
             const id = btn.dataset.id;
-            if (btn.textContent === '＋' && !(cart[id]>=100)) cart[id] = (cart[id]||0) + 1;
-            else if (cart[id] > 0) { cart[id]--; if (!cart[id]) delete cart[id]; }
-            renderAccordion(); updateTotals();
+            if (btn.textContent === '＋' && !(cart[id] >= 100)) {
+              cart[id] = (cart[id] || 0) + 1;
+            } else if (cart[id] > 0) {
+              cart[id]--;
+              if (!cart[id]) delete cart[id];
+            }
+            btn.parentElement.querySelector('span').textContent = cart[id] || 0;
+            updateTotals();
           });
         });
       }
@@ -307,8 +311,8 @@
         const dur = 800; let st;
         function step(ts) {
           if (!st) st = ts;
-          const p = Math.min((ts - st)/dur,1);
-          totalReachEl.textContent = Math.floor(p*(end-start)+start).toLocaleString();
+          const p = Math.min((ts - st) / dur, 1);
+          totalReachEl.textContent = Math.floor(p * (end - start) + start).toLocaleString();
           if (p < 1) raf = requestAnimationFrame(step);
         }
         cancelAnimationFrame(raf);
@@ -316,21 +320,23 @@
       }
 
       function updateTotals() {
-        let price=0, reach=0;
+        let price = 0, reach = 0;
         Object.values(productsData).forEach(ch => ch.items.forEach(p => {
           if (cart[p.id]) {
-            price += p.price*cart[p.id];
-            reach += p.reach*cart[p.id];
+            price += p.price * cart[p.id];
+            reach += p.reach * cart[p.id];
           }
         }));
         totalPriceEl.textContent = `${price.toLocaleString()}원`;
-        submitBtn.disabled = price===0;
+        submitBtn.disabled = price === 0;
         animateMainReach(reach);
       }
 
+      // 초기 렌더링
       renderAccordion();
       updateTotals();
     });
   </script>
+
 </body>
 </html>
