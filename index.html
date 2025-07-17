@@ -19,13 +19,17 @@
 </head>
 <body>
   <div id="three-container"></div>
+
   <div class="ui-container">
+    <!-- 예상 도달 -->
     <main>
       <div class="text-center">
         <p class="text-gray-400 text-lg">예상 도달</p>
         <p id="total-reach" class="text-7xl font-extrabold text-white">0</p>
       </div>
     </main>
+
+    <!-- 실시간 성과 모니터 -->
     <section class="metrics">
       <h2 class="text-white font-semibold mb-2">실시간 성과 모니터</h2>
       <div class="grid grid-cols-2 gap-3">
@@ -47,77 +51,105 @@
         </div>
       </div>
     </section>
+
+    <!-- 카트 & 총합 -->
     <footer>
       <div id="accordion-container" class="space-y-3 mb-4"></div>
       <div class="flex justify-between items-center mb-3">
         <span class="text-gray-400">총 합계 (VAT 별도)</span>
         <span id="total-price" class="text-xl font-bold text-white">0원</span>
       </div>
-      <button id="submit-campaign-btn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-full disabled:bg-gray-700" disabled>캠페인 신청하기</button>
+      <button id="submit-campaign-btn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-full disabled:bg-gray-700" disabled>
+        캠페인 신청하기
+      </button>
     </footer>
   </div>
+
+  <!-- Three.js Starfield & JWST Background -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>
-  // JWST 스타일 우주 배경 + 점수 연동
-  let scene, camera, renderer, stars;
-  let geometry;
-  const starCount = 20000;
-  const uniforms = { sensitivity: { value: 2.0 } };
+  <script>
+    let scene, camera, renderer, stars, bgMesh;
+    let geometry;
+    const starCount = 20000;
 
-  initStars(); animateStars();
+    initScene(); animateLoop();
 
-  function initStars() {
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 2000);
-    camera.position.z = 400;
-    renderer = new THREE.WebGLRenderer({ alpha:true, antialias:true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.getElementById('three-container').appendChild(renderer.domElement);
-    window.addEventListener('resize', ()=>{
-      camera.aspect = window.innerWidth/window.innerHeight;
-      camera.updateProjectionMatrix();
+    function initScene() {
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 2000);
+      camera.position.z = 400;
+
+      renderer = new THREE.WebGLRenderer({ alpha:true, antialias:true });
       renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-    geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(starCount*3);
-    for(let i=0; i<starCount; i++){
-      positions[i*3]   = (Math.random()-0.5)*2000;
-      positions[i*3+1] = (Math.random()-0.5)*2000;
-      positions[i*3+2] = (Math.random()-0.5)*2000;
+      document.getElementById('three-container').appendChild(renderer.domElement);
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth/window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // JWST Deep Field 배경구
+      const loader = new THREE.TextureLoader();
+      loader.load(
+        'https://cdn.spacetelescope.org/archives/images/publicationjpg/heic2002a.jpg',
+        tex => {
+          const bgGeo = new THREE.SphereGeometry(1000, 60, 60);
+          const bgMat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide });
+          bgMesh = new THREE.Mesh(bgGeo, bgMat);
+          scene.add(bgMesh);
+        }
+      );
+
+      // 스타 포인트
+      geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(starCount * 3);
+      for (let i = 0; i < starCount; i++) {
+        positions[i*3]   = (Math.random()-0.5) * 2000;
+        positions[i*3+1] = (Math.random()-0.5) * 2000;
+        positions[i*3+2] = (Math.random()-0.5) * 2000;
+      }
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions,3));
+      geometry.setDrawRange(0, 0);
+
+      const starTex = loader.load(
+        'https://threejs.org/examples/textures/sprites/star.png'
+      );
+      const material = new THREE.PointsMaterial({
+        map: starTex,
+        size: 2,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+
+      stars = new THREE.Points(geometry, material);
+      scene.add(stars);
     }
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions,3));
-    geometry.setDrawRange(0,0);
-    const texLoader = new THREE.TextureLoader();
-    const starTex = texLoader.load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/textures/sprites/star.png');
-    const material = new THREE.PointsMaterial({
-      map: starTex,
-      size: 2,
-      sizeAttenuation: true,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    });
-    stars = new THREE.Points(geometry, material);
-    scene.add(stars);
-  }
 
-  function animateStars() {
-    const reach = parseInt(document.getElementById('total-reach').textContent.replace(/,/g,''))||0;
-    let ratio = Math.min(reach/150000,1);
-    ratio = Math.pow(ratio,0.5) * uniforms.sensitivity.value;
-    ratio = Math.min(ratio,1);
-    const count = Math.floor(starCount * ratio);
-    geometry.setDrawRange(0,count);
-    stars.material.opacity = 0.3 + 0.7*ratio;
-    stars.material.size = 2 + 8*ratio;
-    stars.rotation.y += 0.0008;
-    stars.rotation.x += 0.0005;
-    renderer.render(scene, camera);
-    requestAnimationFrame(animateStars);
-  }
-</script>
+    function animateLoop() {
+      const reach = parseInt(
+        document.getElementById('total-reach').textContent.replace(/,/g,''),
+        10
+      ) || 0;
+      let ratio = Math.min(reach / 150000, 1);
+      ratio = Math.pow(ratio, 0.5) * 1.5;
+      ratio = Math.min(ratio, 1);
 
-  <!-- Campaign Builder Logic -->
+      // 별 개수, 크기, 밝기 증가
+      geometry.setDrawRange(0, Math.floor(starCount * ratio));
+      stars.material.opacity = 0.3 + 0.7 * ratio;
+      stars.material.size = 2 + 8 * ratio;
+
+      // 회전
+      stars.rotation.y += 0.0008;
+      stars.rotation.x += 0.0005;
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(animateLoop);
+    }
+  </script>
+
+  <!-- Campaign Builder Logic (unchanged) -->
   <script>
     document.addEventListener('DOMContentLoaded',()=>{
       const productsData={
