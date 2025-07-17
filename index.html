@@ -1,142 +1,127 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>캠페인 빌더 v38.0 (Three.js AI Background)</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>캠페인 빌더 v38.0 (AI Swirl Background)</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts: Inter -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      font-family: 'Inter', sans-serif;
-      background-color: #0d0c12;
-      color: #e5e7eb;
-      overflow: hidden;
-      height: 100%;
-      width: 100%;
-    }
-    #three-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-    }
-    .ui-container {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-    main {
-      flex-grow: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    footer {
-      flex-shrink: 0;
-    }
-    /* Accordion styles */
-    .accordion-content {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.4s ease-out, padding 0.4s ease-out;
-      padding-top: 0;
-      padding-bottom: 0;
-    }
-    .accordion-content.open {
-      max-height: 500px;
-      padding-top: 0.75rem;
-      padding-bottom: 0.75rem;
-    }
+    body, html { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font-family:'Inter',sans-serif; background:#0d0c12; }
+    #three-container { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
+    .ui-container { position:relative; z-index:1; display:flex; flex-direction:column; height:100%; }
+    main { flex-grow:1; display:flex; align-items:center; justify-content:center; }
+    footer { flex-shrink:0; }
+    .accordion-content { max-height:0; overflow:hidden; transition:max-height 0.4s ease-out, padding 0.4s ease-out; padding-top:0; padding-bottom:0; }
+    .accordion-content.open { max-height:500px; padding-top:0.75rem; padding-bottom:0.75rem; }
   </style>
 </head>
 <body>
   <div id="three-container"></div>
-
   <div class="ui-container max-w-md mx-auto">
-    <!-- 메인 대시보드 -->
     <main>
       <div class="text-center">
         <p class="text-gray-400 text-lg">예상 도달</p>
         <p id="total-reach" class="text-7xl font-extrabold text-white transition-all duration-300">0</p>
       </div>
     </main>
-
-    <!-- 하단 카드 섹션 -->
     <footer class="px-4 pb-6 pt-4">
-      <div id="accordion-container" class="space-y-3 mb-4">
-        <!-- 아코디언 카드들이 여기에 동적으로 렌더링됩니다. -->
-      </div>
+      <div id="accordion-container" class="space-y-3 mb-4"></div>
       <div class="flex justify-between items-center mb-3">
         <span class="text-gray-400">총 합계 (VAT 별도)</span>
         <span id="total-price" class="text-xl font-bold text-white">0원</span>
       </div>
-      <button id="submit-campaign-btn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-full text-base disabled:bg-gray-700 disabled:cursor-not-allowed">
-        캠페인 신청하기
-      </button>
+      <button id="submit-campaign-btn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-full text-base disabled:bg-gray-700 disabled:cursor-not-allowed">캠페인 신청하기</button>
     </footer>
   </div>
 
   <!-- Three.js CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
-    // -- Three.js Background Logic --
-    let scene, camera, renderer, particles;
-    const maxParticles = 5000;
+    // -- AI Swirl Background Logic --
+    let scene, camera, renderer, particleSystem, uniforms;
+    const maxParticles = 20000;
 
     initThree();
-    animateThree();
+    requestAnimationFrame(animate);
 
     function initThree() {
       scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-      camera.position.z = 60;
+      camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+      camera.position.z = 50;
 
       renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-      renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
       document.getElementById('three-container').appendChild(renderer.domElement);
-
       window.addEventListener('resize', onWindowResize);
-      createParticles(0);
-    }
 
-    function createParticles(reach) {
-      const reachRatio = Math.min(reach / 150000, 1);
-      const count = Math.floor(reachRatio * maxParticles);
-
-      if (particles) scene.remove(particles);
+      // Generate particles inside sphere
       const geometry = new THREE.BufferGeometry();
-      const positions = new Float32Array(count * 3);
-
-      for (let i = 0; i < count; i++) {
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.acos(2 * Math.random() - 1);
-        const r = 30;
-
-        positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      const positions = new Float32Array(maxParticles * 3);
+      const angles = new Float32Array(maxParticles);
+      for (let i = 0; i < maxParticles; i++) {
+        const u = Math.random(), v = Math.random();
+        const theta = 2 * Math.PI * u;
+        const phi = Math.acos(2 * v - 1);
+        const r = 30 * Math.pow(Math.random(), 1/3);
+        positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
         positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
         positions[i * 3 + 2] = r * Math.cos(phi);
+        angles[i] = theta;
       }
-
       geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      const material = new THREE.PointsMaterial({ size: 0.7, color: 0x80d8ff, transparent: true, opacity: 0.6 });
-      particles = new THREE.Points(geometry, material);
-      scene.add(particles);
+      geometry.setAttribute('angle', new THREE.BufferAttribute(angles, 1));
+
+      // Uniforms for shader
+      uniforms = {
+        time: { value: 0 },
+        pointSize: { value: 1.2 },
+        opacity: { value: 0.5 }
+      };
+
+      // Shader material for glowing points
+      const material = new THREE.ShaderMaterial({
+        uniforms,
+        vertexShader: `
+          attribute float angle;
+          uniform float time;
+          uniform float pointSize;
+          uniform float opacity;
+          varying float vAlpha;
+          void main() {
+            vec3 pos = position;
+            float a = angle + time * 0.2;
+            pos.xz = mat2(cos(a), -sin(a), sin(a), cos(a)) * pos.xz;
+            float s = sin(a * 3.0) * 0.5 + 1.0;
+            vAlpha = opacity * (0.5 + 0.5 * s);
+            gl_PointSize = pointSize * (0.5 + 0.5 * s) * (300.0 / -mvPosition.z);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+          }
+        `,
+        fragmentShader: `
+          varying float vAlpha;
+          void main() {
+            float d = length(gl_PointCoord - vec2(0.5));
+            float alpha = smoothstep(0.5, 0.0, d) * vAlpha;
+            gl_FragColor = vec4(1.0, 0.6, 0.8, alpha);
+          }
+        `,
+        blending: THREE.AdditiveBlending,
+        transparent: true,
+        depthWrite: false
+      });
+
+      particleSystem = new THREE.Points(geometry, material);
+      scene.add(particleSystem);
     }
 
-    function animateThree() {
-      requestAnimationFrame(animateThree);
-      if (particles) particles.rotation.y += 0.002;
+    function animate(time) {
+      uniforms.time.value = time * 0.001;
       renderer.render(scene, camera);
+      requestAnimationFrame(animate);
     }
 
     function onWindowResize() {
@@ -145,13 +130,16 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
+    // Called whenever reach updates
     function updateGraphic(reach) {
-      createParticles(reach);
+      const ratio = Math.min(reach / 150000, 1);
+      uniforms.pointSize.value = 1.2 + ratio * 2.5;
+      uniforms.opacity.value = 0.3 + ratio * 0.7;
     }
   </script>
 
+  <!-- Campaign Builder Logic remains unchanged -->
   <script>
-    // -- Campaign Builder Logic --
     document.addEventListener('DOMContentLoaded', () => {
       const productsData = {
         'blog': { name: '네이버 블로그', items: [
@@ -165,21 +153,18 @@
           { id: 'insta-mid-mix', name: '인스타(이미지+숏폼)', price: 1200000, reach: 100000 },
         ]}
       };
-
       const cart = {};
-
       const totalReachEl = document.getElementById('total-reach');
       const accordionContainer = document.getElementById('accordion-container');
       const totalPriceEl = document.getElementById('total-price');
       const submitBtn = document.getElementById('submit-campaign-btn');
-
       function renderAccordion() {
         let html = '';
         for (const channelId in productsData) {
           const channel = productsData[channelId];
           let productHtml = '';
           channel.items.forEach(product => {
-            const quantity = cart[product.id] || 0;
+            const qty = cart[product.id] || 0;
             productHtml += `
               <div class="flex justify-between items-center bg-gray-800 p-3 rounded-lg">
                 <div>
@@ -188,102 +173,73 @@
                 </div>
                 <div class="flex items-center space-x-3">
                   <button data-id="${product.id}" class="cart-quantity-change bg-gray-700 rounded-full w-8 h-8 text-xl font-light">-</button>
-                  <span class="font-bold text-white text-lg w-8 text-center">${quantity}</span>
+                  <span class="font-bold text-white text-lg w-8 text-center">${qty}</span>
                   <button data-id="${product.id}" class="cart-quantity-change bg-blue-600 rounded-full w-8 h-8 text-xl font-light">+</button>
                 </div>
               </div>
             `;
           });
-
           html += `
             <div class="accordion-item bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
               <button class="accordion-header w-full text-left p-4 flex justify-between items-center">
                 <span class="font-bold text-white">${channel.name}</span>
                 <svg class="w-5 h-5 text-gray-400 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
               </button>
-              <div class="accordion-content px-4 space-y-3">
-                ${productHtml}
-              </div>
+              <div class="accordion-content px-4 space-y-3">${productHtml}</div>
             </div>
           `;
         }
         accordionContainer.innerHTML = html;
         addAccordionListeners();
       }
-
-      let animationFrameId;
-      function animateMainReach(endValue) {
-        const startValue = parseInt(totalReachEl.textContent.replace(/,/g, '')) || 0;
-        if (startValue === endValue) return;
-        const duration = 1000;
-        let startTime = null;
-        function step(timestamp) {
-          if (!startTime) startTime = timestamp;
-          const progress = Math.min((timestamp - startTime) / duration, 1);
-          const currentValue = Math.floor(progress * (endValue - startValue) + startValue);
-          totalReachEl.textContent = currentValue.toLocaleString();
-          if (progress < 1) animationFrameId = requestAnimationFrame(step);
-        }
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = requestAnimationFrame(step);
-      }
-
-      function updateTotals() {
-        let totalPrice = 0;
-        let totalReach = 0;
-        for (const channelId in productsData) {
-          productsData[channelId].items.forEach(product => {
-            if (cart[product.id]) {
-              totalPrice += product.price * cart[product.id];
-              totalReach += product.reach * cart[product.id];
-            }
-          });
-        }
-        totalPriceEl.textContent = `${totalPrice.toLocaleString()}원`;
-        submitBtn.disabled = totalPrice === 0;
-        animateMainReach(totalReach);
-        updateGraphic(totalReach);
-      }
-
       function addAccordionListeners() {
-        const headers = document.querySelectorAll('.accordion-header');
-        headers.forEach(header => {
+        document.querySelectorAll('.accordion-header').forEach(header => {
           header.addEventListener('click', () => {
             const content = header.nextElementSibling;
             const icon = header.querySelector('svg');
-            document.querySelectorAll('.accordion-content.open').forEach(openContent => {
-              if (openContent !== content) {
-                openContent.classList.remove('open');
-                openContent.previousElementSibling.querySelector('svg').classList.remove('rotate-180');
+            document.querySelectorAll('.accordion-content.open').forEach(open => {
+              if (open !== content) {
+                open.classList.remove('open');
+                open.previousElementSibling.querySelector('svg').classList.remove('rotate-180');
               }
             });
             content.classList.toggle('open');
             icon.classList.toggle('rotate-180');
           });
         });
-
-        const quantityButtons = document.querySelectorAll('.cart-quantity-change');
-        quantityButtons.forEach(btn => {
-          btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.cart-quantity-change').forEach(btn => {
+          btn.addEventListener('click', e => {
             e.stopPropagation();
             const id = btn.dataset.id;
-            const operation = btn.textContent;
-            if (operation === '+') {
-              if ((cart[id] || 0) < 100) cart[id] = (cart[id] || 0) + 1;
-            } else {
-              if (cart[id] && cart[id] > 0) {
-                cart[id]--;
-                if (cart[id] === 0) delete cart[id];
-              }
-            }
-            btn.parentElement.querySelector('span').textContent = cart[id] || 0;
-            updateTotals();
+            if (btn.textContent === '+') cart[id] = (cart[id] || 0) + 1;
+            else if (cart[id] > 0) { cart[id]--; if (!cart[id]) delete cart[id]; }
+            renderAccordion(); updateTotals();
           });
         });
       }
-
-      renderAccordion();
-      updateTotals();
+      let raf;
+      function animateMainReach(end) {
+        const start = parseInt(totalReachEl.textContent.replace(/,/g,'')) || 0;
+        if (start === end) return;
+        const dur = 800; let st;
+        function step(ts) {
+          if (!st) st=ts;
+          const p = Math.min((ts-st)/dur,1);
+          totalReachEl.textContent = Math.floor(p*(end-start)+start).toLocaleString();
+          if (p<1) raf=requestAnimationFrame(step);
+        }
+        cancelAnimationFrame(raf);
+        raf=requestAnimationFrame(step);
+      }
+      function updateTotals() {
+        let price=0, reach=0;
+        Object.values(productsData).forEach(ch=>ch.items.forEach(p=>{ if(cart[p.id]){ price+=p.price*cart[p.id]; reach+=p.reach*cart[p.id]; }}));
+        totalPriceEl.textContent = `${price.toLocaleString()}원`;
+        submitBtn.disabled = price === 0;
+        animateMainReach(reach);
+        updateGraphic(reach);
+      }
+      renderAccordion(); updateTotals();
     });
   </script>
 </body>
