@@ -3,36 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>캠페인 빌더 v38.0 (Starry Background)</title>
-  <!-- Tailwind CSS CDN -->
+  <title>캠페인 빌더 v38.0 (Starry Background + Updated Services)</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts: Inter -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
-    body, html { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font-family:'Inter',sans-serif; background:#0d0c12; }
-    #three-container { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
-    .ui-container { position:relative; z-index:1; display:flex; flex-direction:column; height:100%; max-width:400px; margin:0 auto; }
-    main { flex-grow:1; display:flex; align-items:center; justify-content:center; }
-    section.metrics { padding:1rem; margin-bottom:1rem; color:#9CA3AF; }
-    footer { padding:0 1rem 1rem; }
-    .accordion-content { max-height:0; overflow:hidden; transition:max-height .4s ease, padding .4s ease; padding:0; }
-    .accordion-content.open { max-height:500px; padding:.75rem 0; }
+    body,html{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:'Inter',sans-serif;background:#0d0c12}
+    #three-container{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
+    .ui-container{position:relative;z-index:1;display:flex;flex-direction:column;height:100%;max-width:400px;margin:0 auto}
+    main{flex-grow:1;display:flex;align-items:center;justify-content:center}
+    section.metrics{padding:1rem;margin-bottom:1rem;color:#9CA3AF}
+    footer{padding:0 1rem 1rem}
+    .accordion-content{max-height:0;overflow:hidden;transition:max-height .4s ease,padding .4s ease;padding:0}
+    .accordion-content.open{max-height:500px;padding:.75rem 0}
   </style>
 </head>
 <body>
-  <!-- Starry Background -->
   <div id="three-container"></div>
-
   <div class="ui-container">
-    <!-- 예상 도달 -->
     <main>
       <div class="text-center">
         <p class="text-gray-400 text-lg">예상 도달</p>
         <p id="total-reach" class="text-7xl font-extrabold text-white">0</p>
       </div>
     </main>
-
-    <!-- 실시간 성과 모니터 -->
     <section class="metrics">
       <h2 class="text-white font-semibold mb-2">실시간 성과 모니터</h2>
       <div class="grid grid-cols-2 gap-3">
@@ -54,210 +47,138 @@
         </div>
       </div>
     </section>
-
-    <!-- 카트 & 총합 -->
     <footer>
       <div id="accordion-container" class="space-y-3 mb-4"></div>
       <div class="flex justify-between items-center mb-3">
         <span class="text-gray-400">총 합계 (VAT 별도)</span>
         <span id="total-price" class="text-xl font-bold text-white">0원</span>
       </div>
-      <button id="submit-campaign-btn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-full disabled:bg-gray-700" disabled>
-        캠페인 신청하기
-      </button>
+      <button id="submit-campaign-btn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-full disabled:bg-gray-700" disabled>캠페인 신청하기</button>
     </footer>
   </div>
-
-  <!-- Three.js Starry Background -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
-    let scene, camera, renderer, stars, geometry;
+    let scene, camera, renderer, stars;
+    let geometry;
     const starCount = 10000;
+    const uniforms = { ratio:{ value:0 } };
 
-    initStars();
-    animateStars();
+    initStars(); animateStars();
 
     function initStars() {
       scene = new THREE.Scene();
       camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 1000);
       camera.position.z = 200;
-
       renderer = new THREE.WebGLRenderer({ alpha:true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.getElementById('three-container').appendChild(renderer.domElement);
-
-      window.addEventListener('resize', () => {
+      window.addEventListener('resize', ()=>{
         camera.aspect = window.innerWidth/window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
       });
 
       geometry = new THREE.BufferGeometry();
-      const positions = new Float32Array(starCount * 3);
-      for (let i = 0; i < starCount; i++) {
-        positions[i*3]   = (Math.random() - 0.5) * 1000;
-        positions[i*3+1] = (Math.random() - 0.5) * 1000;
-        positions[i*3+2] = (Math.random() - 0.5) * 1000;
+      const positions = new Float32Array(starCount*3);
+      for(let i=0;i<starCount;i++){
+        positions[i*3]   = (Math.random()-0.5)*1000;
+        positions[i*3+1] = (Math.random()-0.5)*1000;
+        positions[i*3+2] = (Math.random()-0.5)*1000;
       }
-      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      geometry.setDrawRange(0, 0);
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions,3));
+      geometry.setDrawRange(0,0);
 
-      const material = new THREE.PointsMaterial({
-        color: 0xffffff,
-        size: 1,
-        transparent: true,
-        opacity: 0.5
+      const material = new THREE.ShaderMaterial({
+        uniforms,
+        vertexShader: `
+          uniform float ratio;
+          void main(){
+            vec4 mv = modelViewMatrix*vec4(position,1.);
+            gl_PointSize = (1.0+ratio*4.0)*(300.0/ -mv.z);
+            gl_Position = projectionMatrix*mv;
+          }
+        `,
+        fragmentShader: `
+          uniform float ratio;
+          void main(){
+            vec2 uv = gl_PointCoord - vec2(0.5);
+            float angle = atan(uv.y,uv.x);
+            float rad = length(uv);
+            float spikes = 5.0;
+            float m = cos(angle*spikes)*0.5 + 0.5;
+            float shape = smoothstep(0.5*m,0.0,rad);
+            gl_FragColor = vec4(1.0,0.6,0.8, shape*(0.3+0.7*ratio));
+          }
+        `,
+        blending: THREE.AdditiveBlending,
+        transparent:true,
+        depthWrite:false
       });
 
-      stars = new THREE.Points(geometry, material);
+      stars = new THREE.Points(geometry,material);
       scene.add(stars);
     }
 
-    function animateStars(time) {
-      const reach = parseInt(
-        document.getElementById('total-reach').textContent.replace(/,/g,'')) || 0;
-      const ratio = Math.min(reach / 150000, 1);
-
-      // 별 개수 증가
-      const count = Math.floor(starCount * ratio);
-      geometry.setDrawRange(0, count);
-      // 밝기 및 크기 증가
-      stars.material.opacity = 0.3 + 0.7 * ratio;
-      stars.material.size = 1 + 2 * ratio;
-
-      // 회전 애니메이션
+    function animateStars(time){
+      const reach = parseInt(document.getElementById('total-reach').textContent.replace(/,/g,''))||0;
+      const ratio = Math.min(reach/150000,1);
+      uniforms.ratio.value = ratio;
+      const count = Math.floor(starCount*ratio);
+      geometry.setDrawRange(0,count);
       stars.rotation.y += 0.0005;
       stars.rotation.x += 0.0003;
-
-      renderer.render(scene, camera);
+      renderer.render(scene,camera);
       requestAnimationFrame(animateStars);
     }
   </script>
 
   <!-- Campaign Builder Logic -->
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const productsData = {
-        'blog': {
-          name: '네이버 블로그', items: [
-            {id:'blog-seed', name:'블로그(씨앗)', price:80000, reach:1250},
-            {id:'blog-sprout', name:'블로그(새싹)', price:150000, reach:6000},
-            {id:'blog-fruit', name:'블로그(열매)', price:300000, reach:15000},
-          ]
-        },
-        'insta': {
-          name: '인스타그램', items: [
-            {id:'insta-micro-img', name:'인스타(이미지)', price:200000, reach:30000},
-            {id:'insta-micro-vid', name:'인스타(숏폼)', price:450000, reach:30000},
-            {id:'insta-mid-mix', name:'인스타(이미지+숏폼)', price:1200000, reach:100000},
-          ]
-        },
-        'facebook': {
-          name: '페이스북 광고', items: [
-            {id:'fb-img', name:'페이스북(이미지)', price:300000, reach:50000},
-            {id:'fb-vid', name:'페이스북(동영상)', price:600000, reach:100000},
-          ]
-        },
-        'youtube': {
-          name: '유튜브 광고', items: [
-            {id:'yt-skippable', name:'유튜브(스킵가능)', price:800000, reach:150000},
-            {id:'yt-non-skippable', name:'유튜브(스킵불가)', price:1000000, reach:120000},
-          ]
-        }
+    document.addEventListener('DOMContentLoaded',()=>{
+      const productsData={
+        'blog':{ name:'네이버 블로그', items:[
+          {id:'blog-nano', name:'Nano 인플루언서 (블로그)', price:150000, reach:1000},
+          {id:'blog-micro', name:'Micro 인플루언서 (블로그)', price:300000, reach:3000},
+          {id:'blog-macro', name:'Macro 인플루언서 (블로그)', price:500000, reach:8000}
+        ]},
+        'insta':{ name:'인스타그램', items:[
+          {id:'insta-nano-img', name:'Nano 인플루언서 (이미지)', price:200000, reach:5000},
+          {id:'insta-micro-mix', name:'Micro 인플루언서 (이미지+스토리)', price:500000, reach:20000},
+          {id:'insta-macro-vid', name:'Macro 인플루언서 (영상)', price:1000000, reach:50000}
+        ]},
+        'facebook':{ name:'페이스북', items:[
+          {id:'fb-img', name:'이미지 광고', price:250000, reach:40000},
+          {id:'fb-vid', name:'동영상 광고', price:600000, reach:90000}
+        ]},
+        'youtube':{ name:'유튜브', items:[
+          {id:'yt-skip', name:'스킵가능 광고', price:800000, reach:150000},
+          {id:'yt-noskip', name:'스킵불가 광고', price:1000000, reach:120000}
+        ]}
       };
-      const cart = {};
-      const totalReachEl = document.getElementById('total-reach');
-      const accordionContainer = document.getElementById('accordion-container');
-      const totalPriceEl = document.getElementById('total-price');
-      const submitBtn = document.getElementById('submit-campaign-btn');
+      const cart={};
+      const totalReachEl=document.getElementById('total-reach');
+      const accordionContainer=document.getElementById('accordion-container');
+      const totalPriceEl=document.getElementById('total-price');
+      const submitBtn=document.getElementById('submit-campaign-btn');
 
-      function renderAccordion() {
-        let html = '';
-        for (const cid in productsData) {
-          const ch = productsData[cid];
-          let prodHtml = '';
-          ch.items.forEach(p => {
-            const q = cart[p.id] || 0;
-            prodHtml += `
-              <div class="flex justify-between items-center bg-gray-800 p-3 rounded-lg">
-                <div>
-                  <p class="font-semibold text-white">${p.name}</p>
-                  <p class="text-sm text-gray-400">${p.price.toLocaleString()}원</p>
-                </div>
-                <div class="flex items-center space-x-3">
-                  <button data-id="${p.id}" class="cart-quantity-change bg-gray-700 rounded-full w-8 h-8 text-xl font-light">-</button>
-                  <span class="font-bold text-white text-lg w-8 text-center">${q}</span>
-                  <button data-id="${p.id}" class="cart-quantity-change bg-blue-600 rounded-full w-8 h-8 text-xl font-light">+</button>
-                </div>
-              </div>`;
-          });
-          html += `
-            <div class="accordion-item bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
-              <button class="accordion-header w-full text-left p-4 flex justify-between items-center">
-                <span class="font-bold text-white">${ch.name}</span>
-                <svg class="w-5 h-5 text-gray-400 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
-              </button>
-              <div class="accordion-content px-4 space-y-3">${prodHtml}</div>
-            </div>`;
+      function renderAccordion(){
+        let html='';
+        for(const cid in productsData){
+          const ch=productsData[cid];let prodHtml='';
+          ch.items.forEach(p=>{const q=cart[p.id]||0;
+            prodHtml+=`<div class="flex justify-between items-center bg-gray-800 p-3 rounded-lg"><div><p class="font-semibold text-white">${p.name}</p><p class="text-xs text-gray-400">${p.price.toLocaleString()}원 / 명</p></div><div class="flex items-center space-x-3"><button data-id="${p.id}" class="cart-quantity-change bg-gray-700 rounded-full w-8 h-8 text-white font-bold">-</button><span class="font-bold text-white">${q}</span><button data-id="${p.id}" class="cart-quantity-change bg-blue-600 rounded-full w-8 h-8 text-white font-bold">+</button></div></div>`;});
+          html+=`<div class="accordion-item bg-gray-900 rounded-xl border border-gray-800 overflow-hidden"><button class="accordion-header w-full text-left p-4 flex justify-between items-center"><span class="font-bold text-white">${ch.name}</span><svg class="w-5 h-5 text-gray-400 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button><div class="accordion-content px-4 space-y-3">${prodHtml}</div></div>`;
         }
-        accordionContainer.innerHTML = html;
-        addAccordionListeners();
+        accordionContainer.innerHTML=html;addListeners();
       }
-
-      function addAccordionListeners() {
-        document.querySelectorAll('.accordion-header').forEach(h => h.addEventListener('click', () => {
-          const c = h.nextElementSibling, ic = h.querySelector('svg');
-          document.querySelectorAll('.accordion-content.open').forEach(o => {
-            if (o !== c) {
-              o.classList.remove('open');
-              o.previousElementSibling.querySelector('svg').classList.remove('rotate-180');
-            }
-          });
-          c.classList.toggle('open');
-          ic.classList.toggle('rotate-180');
-        }));
-        document.querySelectorAll('.cart-quantity-change').forEach(btn => btn.addEventListener('click', e => {
-          e.stopPropagation();
-          const id = btn.dataset.id;
-          if (btn.textContent === '+' && !(cart[id]>=100)) cart[id] = (cart[id]||0) + 1;
-          else if (cart[id] > 0) { cart[id]--; if (!cart[id]) delete cart[id]; }
-          btn.parentElement.querySelector('span').textContent = cart[id] || 0;
-          updateTotals();
-        }));
+      function addListeners(){
+        document.querySelectorAll('.accordion-header').forEach(h=>h.addEventListener('click',()=>{const c=h.nextElementSibling,ic=h.querySelector('svg');document.querySelectorAll('.accordion-content.open').forEach(o=>{if(o!==c){o.classList.remove('open');o.previousElementSibling.querySelector('svg').classList.remove('rotate-180');}});c.classList.toggle('open');ic.classList.toggle('rotate-180');}));
+        document.querySelectorAll('.cart-quantity-change').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const id=btn.dataset.id;if(btn.textContent==='+'&&! (cart[id]>=100))cart[id]=(cart[id]||0)+1;else if(cart[id]>0){cart[id]--; if(!cart[id])delete cart[id];}document.querySelector(`#accordion-container [data-id="${id}"] + span`).textContent=cart[id]||0;updateTotals();}));
       }
-
       let raf;
-      function animateMainReach(end) {
-        const start = parseInt(totalReachEl.textContent.replace(/,/g,'')) || 0;
-        if (start === end) return;
-        const dur = 800; let st;
-        function step(ts) {
-          if (!st) st = ts;
-          const p = Math.min((ts - st) / dur, 1);
-          totalReachEl.textContent = Math.floor(p * (end - start) + start).toLocaleString();
-          if (p < 1) raf = requestAnimationFrame(step);
-        }
-        cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(step);
-      }
-
-      function updateTotals() {
-        let price = 0, reach = 0;
-        Object.values(productsData).forEach(ch => ch.items.forEach(p => {
-          if (cart[p.id]) {
-            price += p.price * cart[p.id];
-            reach += p.reach * cart[p.id];
-          }
-        }));
-        document.getElementById('total-price').textContent = `${price.toLocaleString()}원`;
-        submitBtn.disabled = price === 0;
-        animateMainReach(reach);
-      }
-
-      renderAccordion();
-      updateTotals();
+      function animateMainReach(end){const start=parseInt(totalReachEl.textContent.replace(/,/g,''))||0;if(start===end) return;const dur=800;let st;function step(ts){if(!st)st=ts;const p=Math.min((ts-st)/dur,1);totalReachEl.textContent=Math.floor(p*(end-start)+start).toLocaleString();if(p<1)raf=requestAnimationFrame(step);}cancelAnimationFrame(raf);raf=requestAnimationFrame(step);}      
+      function updateTotals(){let price=0,reach=0;Object.values(productsData).forEach(ch=>ch.items.forEach(p=>{if(cart[p.id]){price+=p.price*cart[p.id];reach+=p.reach*cart[p.id];}}));totalPriceEl.textContent=`${price.toLocaleString()}원`;submitBtn.disabled=price===0;animateMainReach(reach);}      
+      renderAccordion();updateTotals();
     });
   </script>
 </body>
