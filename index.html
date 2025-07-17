@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>캠페인 빌더 v36.0 (최종 제안)</title>
+    <title>캠페인 빌더 v38.0 (최종 제안)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter -->
@@ -17,15 +17,13 @@
             height: 100%;
             width: 100%;
         }
-        #light-canvas {
+        #arc-canvas {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             z-index: 0;
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .ui-container {
             position: relative;
@@ -39,7 +37,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
         footer {
             flex-shrink: 0;
@@ -61,11 +58,11 @@
     </style>
 </head>
 <body>
-    <canvas id="light-canvas"></canvas>
+    <canvas id="arc-canvas"></canvas>
 
     <div class="ui-container max-w-md mx-auto">
         <!-- 메인 대시보드 -->
-        <main id="main-content">
+        <main>
             <div class="text-center">
                 <p class="text-gray-400 text-lg">예상 도달</p>
                 <p id="total-reach" class="text-7xl font-extrabold text-white transition-all duration-300">0</p>
@@ -89,13 +86,13 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- Convergence Light Canvas Logic ---
-            const canvas = document.getElementById('light-canvas');
+            // --- Processing Arc Canvas Logic ---
+            const canvas = document.getElementById('arc-canvas');
             const ctx = canvas.getContext('2d');
             
-            let targetIntensity = 0;
-            let currentIntensity = 0;
-            let time = 0;
+            let targetProgress = 0;
+            let currentProgress = 0;
+            let orbRotation = 0;
 
             function resizeCanvas() {
                 canvas.width = window.innerWidth;
@@ -105,84 +102,85 @@
             window.addEventListener('resize', resizeCanvas);
 
             function updateGraphic(reach) {
-                const maxReach = 300000;
-                const reachRatio = Math.pow(Math.min(reach / maxReach, 1), 0.5);
-                targetIntensity = reachRatio;
+                // Lower maxReach for higher sensitivity
+                const maxReach = 150000; 
+                const reachRatio = Math.min(reach / maxReach, 1);
+                targetProgress = reachRatio;
             }
 
             function draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                currentIntensity += (targetIntensity - currentIntensity) * 0.05;
-                time += 0.01;
+                currentProgress += (targetProgress - currentProgress) * 0.05;
 
                 const centerX = canvas.width / 2;
                 const centerY = canvas.height / 2;
-                const sphereRadius = Math.min(canvas.width, canvas.height) * 0.8;
-                const gap = 8; // Fixed gap between spheres
+                const radius = canvas.width * 0.9;
+                
+                // Draw Top Arc
+                if (currentProgress > 0.01) {
+                    const arcStartAngle = Math.PI * 1.2;
+                    const arcEndAngle = Math.PI * 1.8;
+                    const currentAngle = arcStartAngle + (arcEndAngle - arcStartAngle) * currentProgress;
 
-                const arcLength = 0.15 + 0.4 * currentIntensity;
-                const mainLineWidth = 4 + 12 * currentIntensity;
-                const subLineWidth = 1 + 2 * currentIntensity;
-                
-                // Draw Arcs
-                ctx.lineCap = 'round';
-                
-                // Top Arc
-                drawArcSet(centerX, centerY - sphereRadius + gap, sphereRadius, 0.5 * Math.PI - arcLength, 0.5 * Math.PI + arcLength, mainLineWidth, subLineWidth);
-                
-                // Bottom Arc
-                drawArcSet(centerX, centerY + sphereRadius - gap, sphereRadius, 1.5 * Math.PI - arcLength, 1.5 * Math.PI + arcLength, mainLineWidth, subLineWidth);
-                
-                // Draw Central Light
-                if (currentIntensity > 0.01) {
-                    const lightHeight = (gap + 60) * currentIntensity;
-                    const centralLightGrad = ctx.createLinearGradient(centerX, centerY - lightHeight, centerX, centerY + lightHeight);
-                    centralLightGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-                    centralLightGrad.addColorStop(0.45, `rgba(255, 255, 255, ${currentIntensity})`);
-                    centralLightGrad.addColorStop(0.55, `rgba(255, 255, 255, ${currentIntensity})`);
-                    centralLightGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                    
-                    ctx.strokeStyle = centralLightGrad;
-                    ctx.lineWidth = 2;
+                    const grad = ctx.createLinearGradient(centerX - radius, centerY, centerX + radius, centerY);
+                    grad.addColorStop(0, '#60a5fa'); // blue-400
+                    grad.addColorStop(0.5, '#f472b6'); // pink-400
+                    grad.addColorStop(1, '#fb923c'); // orange-400
+
                     ctx.beginPath();
-                    ctx.moveTo(centerX, centerY - lightHeight);
-                    ctx.lineTo(centerX, centerY + lightHeight);
+                    ctx.arc(centerX, canvas.height * 0.85, radius, arcStartAngle, currentAngle);
+                    ctx.strokeStyle = grad;
+                    ctx.lineWidth = 8;
+                    ctx.lineCap = 'round';
+                    ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
+                    ctx.shadowBlur = 20;
                     ctx.stroke();
-
-                    // Central glow
-                    const coreGlowGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 70 * currentIntensity);
-                    coreGlowGrad.addColorStop(0, `rgba(255, 255, 255, ${0.9 * currentIntensity})`);
-                    coreGlowGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                    ctx.fillStyle = coreGlowGrad;
-                    ctx.fillRect(centerX - 70, centerY - 70, 140, 140);
+                    ctx.shadowBlur = 0;
                 }
+
+                // Draw Bottom Arc
+                if (currentProgress > 0.01) {
+                    const arcStartAngle = Math.PI * 0.2;
+                    const arcEndAngle = Math.PI * 0.8;
+                    const currentAngle = arcStartAngle + (arcEndAngle - arcStartAngle) * currentProgress;
+                    
+                    const grad = ctx.createLinearGradient(centerX - radius, centerY, centerX + radius, centerY);
+                    grad.addColorStop(0, '#fb923c'); // orange-400
+                    grad.addColorStop(0.5, '#f472b6'); // pink-400
+                    grad.addColorStop(1, '#60a5fa'); // blue-400
+
+                    ctx.beginPath();
+                    // Position the bottom arc relative to the top of the canvas
+                    ctx.arc(centerX, canvas.height * 0.15, radius, arcStartAngle, currentAngle);
+                    ctx.strokeStyle = grad;
+                    ctx.lineWidth = 8;
+                    ctx.lineCap = 'round';
+                    ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
+                    ctx.shadowBlur = 20;
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+                }
+
+
+                // Draw Orb
+                const orbRadius = 15;
+                const orbPathRadius = 40;
+                orbRotation += 0.01;
+                const orbX = centerX + Math.cos(orbRotation) * orbPathRadius;
+                const orbY = canvas.height * 0.2 + Math.sin(orbRotation * 2) * 5;
+
+                const orbGrad = ctx.createLinearGradient(orbX - orbRadius, orbY - orbRadius, orbX + orbRadius, orbY + orbRadius);
+                orbGrad.addColorStop(0, '#f87171'); // red-400
+                orbGrad.addColorStop(1, '#60a5fa'); // blue-400
+                
+                ctx.beginPath();
+                ctx.arc(orbX, orbY, orbRadius, 0, Math.PI * 2);
+                ctx.fillStyle = orbGrad;
+                ctx.fill();
+
 
                 requestAnimationFrame(draw);
             }
-
-            function drawArcSet(x, y, radius, startAngle, endAngle, mainWidth, subWidth) {
-                // Main bright arc
-                const mainGrad = ctx.createLinearGradient(x - radius, y, x + radius, y);
-                mainGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-                mainGrad.addColorStop(0.5, `rgba(255, 255, 255, ${0.6 + 0.4 * currentIntensity})`);
-                mainGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                ctx.lineWidth = mainWidth;
-                ctx.strokeStyle = mainGrad;
-                ctx.shadowColor = 'rgba(200, 220, 255, 0.5)';
-                ctx.shadowBlur = 20 * currentIntensity;
-                ctx.beginPath();
-                ctx.arc(x, y, radius, startAngle, endAngle);
-                ctx.stroke();
-                ctx.shadowBlur = 0;
-
-                // Thinner, sharper outline
-                ctx.lineWidth = subWidth;
-                ctx.strokeStyle = `rgba(230, 230, 255, ${0.2 + 0.3 * currentIntensity})`;
-                ctx.beginPath();
-                ctx.arc(x, y, radius, startAngle, endAngle);
-                ctx.stroke();
-            }
-            
             draw();
 
             // --- Campaign Builder Logic ---
@@ -205,8 +203,6 @@
             const accordionContainer = document.getElementById('accordion-container');
             const totalPriceEl = document.getElementById('total-price');
             const submitBtn = document.getElementById('submit-campaign-btn');
-            const mainContent = document.getElementById('main-content');
-            const lightCanvas = document.getElementById('light-canvas');
             
             function renderAccordion() {
                 let html = '';
@@ -286,22 +282,16 @@
                     header.addEventListener('click', () => {
                         const content = header.nextElementSibling;
                         const icon = header.querySelector('svg');
-                        const wasOpen = content.classList.contains('open');
                         
                         document.querySelectorAll('.accordion-content.open').forEach(openContent => {
-                            openContent.classList.remove('open');
-                            openContent.previousElementSibling.querySelector('svg').classList.remove('rotate-180');
+                            if (openContent !== content) {
+                                openContent.classList.remove('open');
+                                openContent.previousElementSibling.querySelector('svg').classList.remove('rotate-180');
+                            }
                         });
 
-                        if (!wasOpen) {
-                            content.classList.add('open');
-                            icon.classList.add('rotate-180');
-                        }
-                        
-                        // Check if any accordion is open
-                        const anyOpen = document.querySelector('.accordion-content.open');
-                        mainContent.style.transform = `translateY(${anyOpen ? '-96px' : '0px'})`;
-                        lightCanvas.style.transform = `translate(-50%, -50%) ${anyOpen ? 'translateY(-96px)' : ''}`;
+                        content.classList.toggle('open');
+                        icon.classList.toggle('rotate-180');
                     });
                 });
 
