@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>캠페인 빌더 v38.0 (Starry Background)</title>
-  <!-- Tailwind CSS -->
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts: Inter -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
@@ -13,14 +13,14 @@
     #three-container { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
     .ui-container { position:relative; z-index:1; display:flex; flex-direction:column; height:100%; max-width:400px; margin:0 auto; }
     main { flex-grow:1; display:flex; align-items:center; justify-content:center; }
-    section.metrics { padding:0 1rem; margin-bottom:1rem; }
+    section.metrics { padding:1rem; margin-bottom:1rem; color:#9CA3AF; }
     footer { padding:0 1rem 1rem; }
     .accordion-content { max-height:0; overflow:hidden; transition:max-height .4s ease, padding .4s ease; padding:0; }
     .accordion-content.open { max-height:500px; padding:.75rem 0; }
   </style>
 </head>
 <body>
-  <!-- 별 배경 -->
+  <!-- Starry Background -->
   <div id="three-container"></div>
 
   <div class="ui-container">
@@ -32,7 +32,7 @@
       </div>
     </main>
 
-    <!-- 실시간 성과 모니터 (교체된 중간 텍스트) -->
+    <!-- 실시간 성과 모니터 -->
     <section class="metrics">
       <h2 class="text-white font-semibold mb-2">실시간 성과 모니터</h2>
       <div class="grid grid-cols-2 gap-3">
@@ -62,9 +62,7 @@
         <span class="text-gray-400">총 합계 (VAT 별도)</span>
         <span id="total-price" class="text-xl font-bold text-white">0원</span>
       </div>
-      <button id="submit-campaign-btn"
-              class="w-full bg-blue-600 text-white font-bold py-3 rounded-full disabled:bg-gray-700"
-              disabled>
+      <button id="submit-campaign-btn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-full disabled:bg-gray-700" disabled>
         캠페인 신청하기
       </button>
     </footer>
@@ -73,7 +71,7 @@
   <!-- Three.js Starry Background -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
-    let scene, camera, renderer, stars;
+    let scene, camera, renderer, stars, geometry;
     const starCount = 10000;
 
     initStars();
@@ -94,7 +92,7 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
       });
 
-      const geometry = new THREE.BufferGeometry();
+      geometry = new THREE.BufferGeometry();
       const positions = new Float32Array(starCount * 3);
       for (let i = 0; i < starCount; i++) {
         positions[i*3]   = (Math.random() - 0.5) * 1000;
@@ -102,9 +100,13 @@
         positions[i*3+2] = (Math.random() - 0.5) * 1000;
       }
       geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.setDrawRange(0, 0);
 
       const material = new THREE.PointsMaterial({
-        color: 0xffffff, size:1, transparent:true, opacity:0.7
+        color: 0xffffff,
+        size: 1,
+        transparent: true,
+        opacity: 0.5
       });
 
       stars = new THREE.Points(geometry, material);
@@ -114,9 +116,16 @@
     function animateStars(time) {
       const reach = parseInt(
         document.getElementById('total-reach').textContent.replace(/,/g,'')) || 0;
-      const ratio = Math.min(reach/150000, 1);
-      stars.material.opacity = 0.2 + 0.5 * (1 - ratio);
+      const ratio = Math.min(reach / 150000, 1);
 
+      // 별 개수 증가
+      const count = Math.floor(starCount * ratio);
+      geometry.setDrawRange(0, count);
+      // 밝기 및 크기 증가
+      stars.material.opacity = 0.3 + 0.7 * ratio;
+      stars.material.size = 1 + 2 * ratio;
+
+      // 회전 애니메이션
       stars.rotation.y += 0.0005;
       stars.rotation.x += 0.0003;
 
@@ -125,20 +134,36 @@
     }
   </script>
 
-  <!-- Campaign Builder Logic (unchanged) -->
+  <!-- Campaign Builder Logic -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const productsData = {
-        'blog': { name:'네이버 블로그', items:[
-          {id:'blog-seed', name:'블로그(씨앗)', price:80000, reach:1250},
-          {id:'blog-sprout', name:'블로그(새싹)', price:150000, reach:6000},
-          {id:'blog-fruit', name:'블로그(열매)', price:300000, reach:15000},
-        ]},
-        'insta': { name:'인스타그램', items:[
-          {id:'insta-micro-img', name:'인스타(이미지)', price:200000, reach:30000},
-          {id:'insta-micro-vid', name:'인스타(숏폼)', price:450000, reach:30000},
-          {id:'insta-mid-mix', name:'인스타(이미지+숏폼)', price:1200000, reach:100000},
-        ]}
+        'blog': {
+          name: '네이버 블로그', items: [
+            {id:'blog-seed', name:'블로그(씨앗)', price:80000, reach:1250},
+            {id:'blog-sprout', name:'블로그(새싹)', price:150000, reach:6000},
+            {id:'blog-fruit', name:'블로그(열매)', price:300000, reach:15000},
+          ]
+        },
+        'insta': {
+          name: '인스타그램', items: [
+            {id:'insta-micro-img', name:'인스타(이미지)', price:200000, reach:30000},
+            {id:'insta-micro-vid', name:'인스타(숏폼)', price:450000, reach:30000},
+            {id:'insta-mid-mix', name:'인스타(이미지+숏폼)', price:1200000, reach:100000},
+          ]
+        },
+        'facebook': {
+          name: '페이스북 광고', items: [
+            {id:'fb-img', name:'페이스북(이미지)', price:300000, reach:50000},
+            {id:'fb-vid', name:'페이스북(동영상)', price:600000, reach:100000},
+          ]
+        },
+        'youtube': {
+          name: '유튜브 광고', items: [
+            {id:'yt-skippable', name:'유튜브(스킵가능)', price:800000, reach:150000},
+            {id:'yt-non-skippable', name:'유튜브(스킵불가)', price:1000000, reach:120000},
+          ]
+        }
       };
       const cart = {};
       const totalReachEl = document.getElementById('total-reach');
@@ -160,11 +185,9 @@
                   <p class="text-sm text-gray-400">${p.price.toLocaleString()}원</p>
                 </div>
                 <div class="flex items-center space-x-3">
-                  <button data-id="${p.id}"
-                          class="cart-quantity-change bg-gray-700 rounded-full w-8 h-8 text-xl font-light">-</button>
+                  <button data-id="${p.id}" class="cart-quantity-change bg-gray-700 rounded-full w-8 h-8 text-xl font-light">-</button>
                   <span class="font-bold text-white text-lg w-8 text-center">${q}</span>
-                  <button data-id="${p.id}"
-                          class="cart-quantity-change bg-blue-600 rounded-full w-8 h-8 text-xl font-light">+</button>
+                  <button data-id="${p.id}" class="cart-quantity-change bg-blue-600 rounded-full w-8 h-8 text-xl font-light">+</button>
                 </div>
               </div>`;
           });
@@ -172,10 +195,8 @@
             <div class="accordion-item bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
               <button class="accordion-header w-full text-left p-4 flex justify-between items-center">
                 <span class="font-bold text-white">${ch.name}</span>
-                <svg class="w-5 h-5 text-gray-400 transition-transform"
-                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 9l-7 7-7-7"/>
+                <svg class="w-5 h-5 text-gray-400 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
               </button>
               <div class="accordion-content px-4 space-y-3">${prodHtml}</div>
@@ -197,16 +218,14 @@
           c.classList.toggle('open');
           ic.classList.toggle('rotate-180');
         }));
-        document.querySelectorAll('.cart-quantity-change').forEach(btn => {
-          btn.addEventListener('click', e => {
-            e.stopPropagation();
-            const id = btn.dataset.id;
-            if (btn.textContent === '+' && !(cart[id]>=100)) cart[id] = (cart[id]||0) + 1;
-            else if (cart[id] > 0) { cart[id]--; if (!cart[id]) delete cart[id]; }
-            btn.parentElement.querySelector('span').textContent = cart[id] || 0;
-            updateTotals();
-          });
-        });
+        document.querySelectorAll('.cart-quantity-change').forEach(btn => btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const id = btn.dataset.id;
+          if (btn.textContent === '+' && !(cart[id]>=100)) cart[id] = (cart[id]||0) + 1;
+          else if (cart[id] > 0) { cart[id]--; if (!cart[id]) delete cart[id]; }
+          btn.parentElement.querySelector('span').textContent = cart[id] || 0;
+          updateTotals();
+        }));
       }
 
       let raf;
@@ -216,8 +235,8 @@
         const dur = 800; let st;
         function step(ts) {
           if (!st) st = ts;
-          const p = Math.min((ts-st)/dur,1);
-          totalReachEl.textContent = Math.floor(p*(end-start)+start).toLocaleString();
+          const p = Math.min((ts - st) / dur, 1);
+          totalReachEl.textContent = Math.floor(p * (end - start) + start).toLocaleString();
           if (p < 1) raf = requestAnimationFrame(step);
         }
         cancelAnimationFrame(raf);
@@ -232,7 +251,7 @@
             reach += p.reach * cart[p.id];
           }
         }));
-        totalPriceEl.textContent = `${price.toLocaleString()}원`;
+        document.getElementById('total-price').textContent = `${price.toLocaleString()}원`;
         submitBtn.disabled = price === 0;
         animateMainReach(reach);
       }
