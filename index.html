@@ -1,37 +1,40 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>캠페인 셀프 견적 & 성과 모니터</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts: Inter -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     body, html {
-      margin:0; padding:0;
-      width:100%; height:100%;
-      background:#000;
-      font-family:'Inter',sans-serif;
-      overflow:hidden;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
     }
     #three-container {
-      position:fixed;
-      top:0; left:0;
-      width:100%; height:100%;
-      z-index:0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
     }
     .ui-container {
-      position:relative;
-      z-index:1;
-      max-width:420px;
-      margin:0 auto;
-      height:100%;
-      display:flex;
-      flex-direction:column;
-      background:rgba(0,0,0,0.4);
-      /* 스크롤 숨기기 */
+      position: relative;
+      z-index: 1;
+      max-width: 420px;
+      margin: 0 auto;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: rgba(0,0,0,0.4);
       overflow-y: scroll;
       scrollbar-width: none;
       -ms-overflow-style: none;
@@ -40,102 +43,106 @@
       display: none;
     }
     main {
-      flex:1;
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
     }
     section.metrics {
-      flex-shrink:0;
-      padding:1rem;
-      color:#ccc;
+      flex-shrink: 0;
+      padding: 1rem;
+      color: #ccc;
     }
     section.metrics h2 {
-      color:#fff;
-      font-weight:600;
-      margin-bottom:0.75rem;
+      color: #fff;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
     }
     section.metrics ul {
       list-style: disc inside;
-      font-size:0.875rem;
-      line-height:1.4;
-    }
-    footer {
-      flex-shrink:0;
-      padding:0 1rem 1rem;
+      font-size: 0.875rem;
+      line-height: 1.4;
     }
     .accordion-item {
-      margin-bottom:0.75rem;
+      margin-bottom: 0.75rem;
     }
     .accordion-header {
-      width:100%;
-      background:#1f2937;
-      color:#fff;
-      padding:0.75rem;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      border-radius:0.5rem;
-      cursor:pointer;
+      background: #1f2937;
+      color: #fff;
+      padding: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 0.5rem;
+      cursor: pointer;
     }
     .accordion-content {
-      max-height:0;
-      overflow:hidden;
-      transition:max-height 0.3s ease;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
     }
     .accordion-content.open {
-      max-height:500px;
+      max-height: 500px;
     }
     .option {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      background:#374151;
-      padding:0.75rem;
-      border-radius:0.5rem;
-      margin:0.5rem 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #374151;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      margin-top: 0.5rem;
     }
     .option-info {
-      color:#d1d5db;
-      font-size:0.875rem;
+      color: #d1d5db;
+      font-size: 0.875rem;
+    }
+    .option-info span {
+      display: block;
+      font-size: 0.75rem;
+      color: #9ca3af;
     }
     .option-controls {
-      display:flex;
-      align-items:center;
-      gap:0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
     .option-controls button {
-      background:#4b5563;
-      color:#fff;
-      width:1.5rem;
-      height:1.5rem;
-      border-radius:50%;
+      background: #4b5563;
+      color: #fff;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+    }
+    footer {
+      flex-shrink: 0;
+      padding: 0 1rem 1rem;
     }
     .total {
-      display:flex;
-      justify-content:space-between;
-      color:#d1d5db;
-      margin-bottom:0.75rem;
+      display: flex;
+      justify-content: space-between;
+      color: #d1d5db;
+      margin-bottom: 0.75rem;
     }
     .total .amount {
-      color:#fff;
-      font-weight:700;
-      font-size:1.25rem;
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.25rem;
     }
     .btn {
-      width:100%;
-      padding:0.75rem;
-      background:#fbbf24;
-      color:#000;
-      font-weight:700;
-      border:none;
-      border-radius:0.5rem;
+      width: 100%;
+      padding: 0.75rem;
+      background: #fbbf24;
+      color: #000;
+      font-weight: 700;
+      border: none;
+      border-radius: 0.5rem;
     }
   </style>
 </head>
 <body>
   <div id="three-container"></div>
-
   <div class="ui-container">
     <!-- 예상 도달 -->
     <main>
@@ -179,16 +186,19 @@
     let starGeo, starMat;
     const STAR_COUNT = 20000;
 
-    initScene(); animateScene();
+    initScene();
+    animateScene();
 
     function initScene() {
       scene = new THREE.Scene();
       camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 2000);
       camera.position.z = 400;
+
       renderer = new THREE.WebGLRenderer({ alpha:true, antialias:true });
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.getElementById('three-container').appendChild(renderer.domElement);
+
       window.addEventListener('resize', ()=>{
         camera.aspect = window.innerWidth/window.innerHeight;
         camera.updateProjectionMatrix();
@@ -206,7 +216,7 @@
       starGeo.setDrawRange(0, 0);
 
       const sprite = new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/spark1.png');
-      starMat = new THREE.PointsMaterial({ map: sprite, size:2, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.3 });
+      starMat = new THREE.PointsMaterial({ map: sprite, size: 1.5, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.3 });
 
       stars = new THREE.Points(starGeo, starMat);
       scene.add(stars);
@@ -215,20 +225,18 @@
     function animateScene() {
       const reach = parseInt(document.getElementById('total-reach').textContent.replace(/,/g,'')) || 0;
       let ratio = Math.min(reach / 150000, 1);
-      // 민감도 증가: 낮은 수치에서도 변화가 잘 보이도록 sqrt 기반 반응
-      let eff = 0.1 + Math.pow(ratio, 0.5) * 0.8;
+      // 낮은 수치에서도 변화가 잘 보이도록 sqrt 사용
+      let eff = 0.1 + Math.sqrt(ratio) * 0.8;
 
       starGeo.setDrawRange(0, Math.floor(STAR_COUNT * eff));
-      // 투명도 및 크기도 비례 확대
       starMat.opacity = 0.1 + 0.6 * ratio;
-      starMat.size    = 1 + 6 * ratio;
+      starMat.size    = 1.5 + 5 * ratio;
 
       stars.rotation.y += 0.0005;
       stars.rotation.x += 0.0003;
 
       renderer.render(scene, camera);
       requestAnimationFrame(animateScene);
-    }
     }
   </script>
 
@@ -271,7 +279,7 @@
           html += `<div class="accordion-content">`;
           productsData[category].forEach(item => {
             const qty = cart[item.id] || 0;
-            html += `<div class="option"><div class="option-info"><p>${item.name}</p><span>|| ${item.reach.toLocaleString()} 도달</span></div><div class="option-controls"><button data-id="${item.id}">−</button><span>${qty}</span><button data-id="${item.id}">＋</button></div></div>`;
+            html += `<div class="option"><div class="option-info"><p>${item.name}</p><span>${item.reach.toLocaleString()} 도달</span></div><div class="option-controls"><button data-id="${item.id}">−</button><span>${qty}</span><button data-id="${item.id}">＋</button></div></div>`;
           });
           html += `</div></div>`;
         }
@@ -328,10 +336,9 @@
       function updateTotals() {
         let price = 0, reach = 0;
         for (let id in cart) {
-          price += productsData[Object.keys(productsData).find(cat => productsData[cat].some(i => i.id === id))]
-                   .find(i => i.id === id).price * cart[id];
-          reach += productsData[Object.keys(productsData).find(cat => productsData[cat].some(i => i.id === id))]
-                   .find(i => i.id === id).reach * cart[id];
+          const item = Object.values(productsData).flat().find(i => i.id === id);
+          price += item.price * cart[id];
+          reach += item.reach * cart[id];
         }
         totalPriceEl.textContent = `${price.toLocaleString()}원`;
         submitBtn.disabled = price === 0;
