@@ -7,23 +7,27 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body, html { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; font-family:'Inter',sans-serif; }
+    body, html { margin:0; padding:0; width:100%; height:100%; background:#000; overflow:hidden; font-family:'Inter',sans-serif; }
     #three-container { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
     .ui-container { position:relative; z-index:1; max-width:420px; margin:0 auto; height:100%; display:flex; flex-direction:column; background:rgba(0,0,0,0.4); overflow-y:auto; }
     header { padding:1rem; text-align:center; }
     header h1 { color:#fff; font-size:1.5rem; font-weight:700; }
-    main { padding:1rem; }
+    main { padding:0 1rem; flex-shrink:0; }
     .infographic { background:rgba(255,255,255,0.05); margin-bottom:1rem; padding:1rem; border-radius:0.5rem; }
     .funnel { width:100%; height:12rem; display:flex; flex-direction:column; justify-content:flex-end; }
     .funnel .level { display:flex; align-items:center; justify-content:center; color:#fff; font-size:0.875rem; font-weight:600; }
     .kpi-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; }
     .kpi-card { background:#1f2937; padding:0.75rem; border-radius:0.5rem; color:#fff; text-align:center; }
     .kpi-card .value { font-size:1.25rem; font-weight:700; }
-    section.packages { padding:0 1rem 1rem; }
-    .package-category { margin-bottom:1rem; }
-    .package-category h3 { color:#fff; font-size:1rem; font-weight:600; margin-bottom:0.5rem; }
+    section.packages { padding:0 1rem 1rem; flex-shrink:0; }
+    .accordion-item { margin-bottom:0.5rem; }
+    .accordion-header { width:100%; text-left; padding:0.75rem; display:flex; justify-content:space-between; align-items:center; background:#1f2937; border-radius:0.5rem; }
+    .accordion-header span { color:#fff; font-weight:600; }
+    .accordion-content { max-height:0; overflow:hidden; transition:max-height 0.3s ease, padding 0.3s ease; padding:0 0; }
+    .accordion-content.open { max-height:400px; padding:0.5rem 0; }
     .option { display:flex; justify-content:space-between; align-items:center; background:#374151; padding:0.75rem; border-radius:0.5rem; margin-bottom:0.5rem; }
     .option-info { color:#d1d5db; font-size:0.875rem; }
+    .option-info span { display:block; font-size:0.75rem; color:#9ca3af; }
     .option-controls { display:flex; align-items:center; gap:0.5rem; }
     .option-controls button { background:#4b5563; color:#fff; width:1.5rem; height:1.5rem; border-radius:50%; }
     footer { padding:1rem; flex-shrink:0; }
@@ -35,16 +39,12 @@
 <body>
   <div id="three-container"></div>
   <div class="ui-container">
-    <header>
-      <h1>온라인 셀프 견적 & 캠페인 관리</h1>
-    </header>
+    <header><h1>온라인 셀프 견적 & 캠페인 관리</h1></header>
     <main>
-      <!-- 예상 도달 -->
       <div class="infographic text-center">
         <p class="text-gray-400 mb-1">예상 도달</p>
         <p id="total-reach" class="text-4xl font-bold text-white">0</p>
       </div>
-      <!-- 마케팅 퍼널 -->
       <div class="infographic">
         <h2 class="text-white font-semibold mb-2">마케팅 퍼널</h2>
         <div class="funnel">
@@ -54,7 +54,6 @@
           <div class="level bg-pink-500 w-1/4 h-1/4">전환 <span class="ml-2 text-sm">500</span></div>
         </div>
       </div>
-      <!-- KPI 카드 -->
       <div class="infographic">
         <h2 class="text-white font-semibold mb-2">핵심 성과 지표</h2>
         <div class="kpi-grid">
@@ -65,38 +64,9 @@
         </div>
       </div>
     </main>
-    <!-- 서비스 패키지 -->
     <section class="packages">
       <h2 class="text-white font-semibold mb-2">서비스 패키지</h2>
-      <!-- 블로그 -->
-      <div class="package-category">
-        <h3>블로그 마케팅</h3>
-        <div class="option"><div class="option-info">단일 리뷰 포스트<br><span class="text-xs">최소 800 노출</span></div><div class="option-controls"><button data-id="blog-1">−</button><span id="qty-blog-1" class="text-white">0</span><button data-id="blog-1">＋</button></div></div>
-        <div class="option"><div class="option-info">콘텐츠 패키지 (3개)<br><span class="text-xs">최소 3,000 노출</span></div><div class="option-controls"><button data-id="blog-3">−</button><span id="qty-blog-3" class="text-white">0</span><button data-id="blog-3">＋</button></div></div>
-        <div class="option"><div class="option-info">프리미엄 캠페인 (5개)<br><span class="text-xs">최소 6,000 노출</span></div><div class="option-controls"><button data-id="blog-5">−</button><span id="qty-blog-5" class="text-white">0</span><button data-id="blog-5">＋</button></div></div>
-      </div>
-      <!-- 인스타그램 -->
-      <div class="package-category">
-        <h3>인스타그램 마케팅</h3>
-        <div class="option"><div class="option-info">정적 이미지 포스트<br><span class="text-xs">최소 30,000 노출</span></div><div class="option-controls"><button data-id="insta-static">−</button><span id="qty-insta-static" class="text-white">0</span><button data-id="insta-static">＋</button></div></div>
-        <div class="option"><div class="option-info">스토리 광고(5회)<br><span class="text-xs">최소 40,000 노출</span></div><div class="option-controls"><button data-id="insta-story">−</button><span id="qty-insta-story" class="text-white">0</span><button data-id="insta-story">＋</button></div></div>
-        <div class="option"><div class="option-info">Reels 숏폼<br><span class="text-xs">최소 80,000 노출</span></div><div class="option-controls"><button data-id="insta-reels">−</button><span id="qty-insta-reels" class="text-white">0</span><button data-id="insta-reels">＋</button></div></div>
-        <div class="option"><div class="option-info">풀 콤보 패키지<br><span class="text-xs">이미지+스토리+Reels</span></div><div class="option-controls"><button data-id="insta-combo">−</button><span id="qty-insta-combo" class="text-white">0</span><button data-id="insta-combo">＋</button></div></div>
-      </div>
-      <!-- 페이스북 -->
-      <div class="package-category">
-        <h3>페이스북 퍼포먼스</h3>
-        <div class="option"><div class="option-info">피드 CPM 캠페인<br><span class="text-xs">최소 50,000 노출</span></div><div class="option-controls"><button data-id="fb-cpm">−</button><span id="qty-fb-cpm" class="text-white">0</span><button data-id="fb-cpm">＋</button></div></div>
-        <div class="option"><div class="option-info">동영상 CPM 캠페인<br><span class="text-xs">최소 70,000 노출</span></div><div class="option-controls"><button data-id="fb-cpc">−</button><span id="qty-fb-cpc" class="text-white">0</span><button data-id="fb-cpc">＋</button></div></div>
-        <div class="option"><div class="option-info">리드 폼 광고<br><span class="text-xs">최소 60,000 리드</span></div><div class="option-controls"><button data-id="fb-lead">−</button><span id="qty-fb-lead" class="text-white">0</span><button data-id="fb-lead">＋</button></div></div>
-      </div>
-      <!-- 유튜브 -->
-      <div class="package-category">
-        <h3>유튜브 브랜딩</h3>
-        <div class="option"><div class="option-info">6초 Bumper 광고<br><span class="text-xs">최소 80,000 노출</span></div><div class="option-controls"><button data-id="yt-bumper">−</button><span id="qty-yt-bumper" class="text-white">0</span><button data-id="yt-bumper">＋</button></div></div>
-        <div class="option"><div class="option-info">스킵 가능 프리롤<br><span class="text-xs">최소 150,000 노출</span></div><div class="option-controls"><button data-id="yt-skippable">−</button><span id="qty-yt-skippable" class="text-white">0</span><button data-id="yt-skippable">＋</button></div></div>
-        <div class="option"><div class="option-info">스킵 불가 프리롤<br><span class="text-xs">최소 120,000 노출</span></div><div class="option-controls"><button data-id="yt-noskip">−</button><span id="qty-yt-noskip" class="text-white">0</span><button data-id="yt-noskip">＋</button></div></div>
-      </div>
+      <div id="accordion-container"></div>
     </section>
     <footer>
       <div class="total"><span>총 합계 (VAT 별도)</span><span class="amount" id="total-price">0원</span></div>
@@ -104,7 +74,6 @@
     </footer>
   </div>
 
-  <!-- Three.js 스타필드 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
     let scene, camera, renderer, stars;
@@ -120,7 +89,7 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.getElementById('three-container').appendChild(renderer.domElement);
       window.addEventListener('resize', ()=>{ camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth,window.innerHeight); });
-      starGeo = new THREE.BufferGeometry(); const pos=new Float32Array(STAR_COUNT*3);
+      starGeo=new THREE.BufferGeometry(); const pos=new Float32Array(STAR_COUNT*3);
       for(let i=0;i<STAR_COUNT;i++){ pos[i*3]=(Math.random()-0.5)*2000; pos[i*3+1]=(Math.random()-0.5)*2000; pos[i*3+2]=(Math.random()-0.5)*2000; }
       starGeo.setAttribute('position', new THREE.BufferAttribute(pos,3)); starGeo.setDrawRange(0,0);
       const sprite=new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/spark1.png');
@@ -130,28 +99,124 @@
     function animateScene(){ const reach=parseInt(document.getElementById('total-reach').textContent.replace(/,/g,''))||0; let ratio=Math.min(reach/300000,1); const eff=0.1+ratio*0.9; starGeo.setDrawRange(0,Math.floor(STAR_COUNT*eff)); starMat.opacity=0.2+0.8*ratio; starMat.size=1+9*ratio; stars.rotation.y+=0.0007; stars.rotation.x+=0.0004; renderer.render(scene,camera); requestAnimationFrame(animateScene);}  
   </script>
 
-  <!-- Campaign Builder Logic -->
   <script>
     document.addEventListener('DOMContentLoaded',()=>{
       const productsData={
-        'blog-1':{id:'blog-1',price:150000,reach:1200},
-        'blog-3':{id:'blog-3',price:400000,reach:3500},
-        'blog-5':{id:'blog-5',price:600000,reach:6000},
-        'insta-static':{id:'insta-static',price:200000,reach:30000},
-        'insta-story':{id:'insta-story',price:250000,reach:40000},
-        'insta-reels':{id:'insta-reels',price:500000,reach:80000},
-        'insta-combo':{id:'insta-combo',price:800000,reach:120000},
-        'fb-cpm':{id:'fb-cpm',price:300000,reach:50000},
-        'fb-cpc':{id:'fb-cpc',price:450000,reach:70000},
-        'fb-lead':{id:'fb-lead',price:500000,reach:60000},
-        'yt-bumper':{id:'yt-bumper',price:500000,reach:80000},
-        'yt-skippable':{id:'yt-skippable',price:900000,reach:150000},
-        'yt-noskip':{id:'yt-noskip',price:1100000,reach:120000}
+        '블로그 콘텐츠':{ name:'블로그 콘텐츠', items:[
+          { id:'blog-1', name:'단일 리뷰 포스트',      price:150000, reach:1200 },
+          { id:'blog-3', name:'콘텐츠 패키지 (3개)',  price:400000, reach:3500 },
+          { id:'blog-5', name:'프리미엄 캠페인 (5개)', price:600000, reach:6000 }
+        ]},
+        '인스타그램 콘텐츠':{ name:'인스타그램 콘텐츠', items:[
+          { id:'insta-static', name:'정적 이미지 포스트',       price:200000, reach:30000 },
+          { id:'insta-story',  name:'스토리 광고 (5회)',       price:250000, reach:40000 },
+          { id:'insta-reels',  name:'Reels 숏폼 광고',        price:500000, reach:80000 },
+          { id:'insta-combo',  name:'풀 콤보 패키지',         price:800000, reach:120000 }
+        ]},
+        '페이스북 광고':{ name:'페이스북 광고', items:[
+          { id:'fb-cpm',  name:'피드 CPM 캠페인',      price:300000, reach:50000 },
+          { id:'fb-cpc',  name:'동영상 CPM 캠페인',    price:450000, reach:70000 },
+          { id:'fb-lead', name:'리드 폼 광고',         price:500000, reach:60000 }
+        ]},
+        '유튜브 브랜딩':{ name:'유튜브 브랜딩', items:[
+          { id:'yt-bumper',    name:'6초 Bumper 광고',        price:500000, reach:80000 },
+          { id:'yt-skippable', name:'스킵 가능 프리롤',      price:900000, reach:150000 },
+          { id:'yt-noskip',    name:'스킵 불가 프리롤',      price:1100000, reach:120000 }
+        ]}
       };
-      const cart={}; const totalReachEl=document.getElementById('total-reach'); const priceEl=document.getElementById('total-price'); const btn=document.getElementById('submit-campaign-btn');
-      function updateTotals(){ let price=0,reach=0; for(const key in cart){ price+=productsData[key].price*cart[key]; reach+=productsData[key].reach*cart[key]; } document.getElementById('total-price').textContent=`${price.toLocaleString()}원`; btn.disabled=price===0; animateReach(reach);}      
-      function animateReach(end){ const start=parseInt(totalReachEl.textContent.replace(/,/g,''))||0; if(start===end)return; let dur=800,st; function step(ts){ if(!st)st=ts; const p=Math.min((ts-st)/dur,1); totalReachEl.textContent=Math.floor(p*(end-start)+start).toLocaleString(); if(p<1)requestAnimationFrame(step);} requestAnimationFrame(step);}    
-      document.querySelectorAll('.cart-quantity-change').forEach(btn2=>{ btn2.addEventListener('click',e=>{ e.stopPropagation(); e.preventDefault(); const id=btn2.dataset.id; if(btn2.textContent==='＋') cart[id]=(cart[id]||0)+1; else if(cart[id]>0) cart[id]--; btn2.parentElement.querySelector('span').textContent=cart[id]||0; updateTotals(); }); });
+      const cart={};
+      const accordionContainer=document.getElementById('accordion-container');
+      const totalReachEl=document.getElementById('total-reach');
+      const totalPriceEl=document.getElementById('total-price');
+      const submitBtn=document.getElementById('submit-campaign-btn');
+
+      function renderAccordion(){
+        let html='';
+        for(const key in productsData){
+          const ch=productsData[key];
+          let itemsHtml='';
+          ch.items.forEach(p=>{
+            const qty=cart[p.id]||0;
+            itemsHtml+=
+              `<div class="option">
+                <div class="option-info">
+                  <p>${p.name}</p>
+                  <span>|| ${p.reach.toLocaleString()} 도달</span>
+                </div>
+                <div class="option-controls">
+                  <button data-id="${p.id}">−</button>
+                  <span>${qty}</span>
+                  <button data-id="${p.id}">＋</button>
+                </div>
+              </div>`;
+          });
+          html+=
+            `<div class="accordion-item">
+              <button class="accordion-header">
+                <span>${ch.name}</span>
+                <svg class="w-5 h-5 text-gray-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+              <div class="accordion-content">${itemsHtml}</div>
+            </div>`;
+        }
+        accordionContainer.innerHTML=html;
+        attachListeners();
+      }
+
+      function attachListeners(){
+        document.querySelectorAll('.accordion-header').forEach(header=>{
+          header.addEventListener('click',()=>{
+            const content=header.nextElementSibling;
+            const icon=header.querySelector('svg');
+            document.querySelectorAll('.accordion-content.open').forEach(open=>{
+              if(open!==content){ open.classList.remove('open'); open.previousElementSibling.querySelector('svg').classList.remove('rotate-180'); }
+            });
+            content.classList.toggle('open');
+            icon.classList.toggle('rotate-180');
+          });
+        });
+        document.querySelectorAll('.option-controls button').forEach(btn=>{
+          btn.addEventListener('click',e=>{
+            e.stopPropagation();
+            const id=btn.dataset.id;
+            if(btn.textContent==='＋'){
+              cart[id]=(cart[id]||0)+1;
+            } else if(cart[id]>0) {
+              cart[id]--;
+              if(!cart[id]) delete cart[id];
+            }
+            btn.parentElement.querySelector('span').textContent=cart[id]||0;
+            updateTotals();
+          });
+        });
+      }
+
+      let raf;
+      function animateReach(end){
+        const start=parseInt(totalReachEl.textContent.replace(/,/g,''))||0;
+        if(start===end) return;
+        const dur=800; let st;
+        function step(ts){
+          if(!st) st=ts;
+          const p=Math.min((ts-st)/dur,1);
+          totalReachEl.textContent=Math.floor(p*(end-start)+start).toLocaleString();
+          if(p<1) raf=requestAnimationFrame(step);
+        }
+        cancelAnimationFrame(raf);
+        raf=requestAnimationFrame(step);
+      }
+
+      function updateTotals(){
+        let price=0, reach=0;
+        for(const id in cart){ price+=productsData[findCategory(id)].items.find(x=>x.id===id).price*cart[id]; reach+=productsData[findCategory(id)].items.find(x=>x.id===id).reach*cart[id]; }
+        totalPriceEl.textContent=`${price.toLocaleString()}원`;
+        submitBtn.disabled=price===0;
+        animateReach(reach);
+      }
+      function findCategory(pid){ return Object.values(productsData).find(cat=>cat.items.some(x=>x.id===pid)).name; }
+
+      renderAccordion();
+      updateTotals();
     });
   </script>
 </body>
