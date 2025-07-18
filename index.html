@@ -1,85 +1,186 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>캠페인 셀프 견적 & 성과 인포그래픽</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>캠페인 셀프 견적 & 성과 모니터</title>
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Google Fonts: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    body, html { margin:0; padding:0; width:100%; height:100%; background:#000; overflow:hidden; font-family:'Inter',sans-serif; }
-    #three-container { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
-    .ui-container { position:relative; z-index:1; max-width:420px; margin:0 auto; height:100%; display:flex; flex-direction:column; background:rgba(0,0,0,0.4); overflow-y:auto; }
-    header { padding:1rem; text-align:center; }
-    header h1 { color:#fff; font-size:1.5rem; font-weight:700; }
-    main { padding:0 1rem; flex-shrink:0; }
-    .infographic { background:rgba(255,255,255,0.05); margin-bottom:1rem; padding:1rem; border-radius:0.5rem; }
-    .funnel { width:100%; height:12rem; display:flex; flex-direction:column; justify-content:flex-end; }
-    .funnel .level { display:flex; align-items:center; justify-content:center; color:#fff; font-size:0.875rem; font-weight:600; }
-    .kpi-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; }
-    .kpi-card { background:#1f2937; padding:0.75rem; border-radius:0.5rem; color:#fff; text-align:center; }
-    .kpi-card .value { font-size:1.25rem; font-weight:700; }
-    section.packages { padding:0 1rem 1rem; flex-shrink:0; }
-    .accordion-item { margin-bottom:0.5rem; }
-    .accordion-header { width:100%; text-left; padding:0.75rem; display:flex; justify-content:space-between; align-items:center; background:#1f2937; border-radius:0.5rem; }
-    .accordion-header span { color:#fff; font-weight:600; }
-    .accordion-content { max-height:0; overflow:hidden; transition:max-height 0.3s ease, padding 0.3s ease; padding:0 0; }
-    .accordion-content.open { max-height:400px; padding:0.5rem 0; }
-    .option { display:flex; justify-content:space-between; align-items:center; background:#374151; padding:0.75rem; border-radius:0.5rem; margin-bottom:0.5rem; }
-    .option-info { color:#d1d5db; font-size:0.875rem; }
-    .option-info span { display:block; font-size:0.75rem; color:#9ca3af; }
-    .option-controls { display:flex; align-items:center; gap:0.5rem; }
-    .option-controls button { background:#4b5563; color:#fff; width:1.5rem; height:1.5rem; border-radius:50%; }
-    footer { padding:1rem; flex-shrink:0; }
-    .total { display:flex; justify-content:space-between; color:#d1d5db; margin-bottom:0.5rem; }
-    .total .amount { font-size:1.25rem; font-weight:700; color:#fff; }
-    .btn { width:100%; padding:0.75rem; background:#fbbf24; color:#000; font-weight:700; border:none; border-radius:0.5rem; }
+    body, html {
+      margin:0; padding:0;
+      width:100%; height:100%;
+      background:#000;
+      font-family:'Inter',sans-serif;
+      overflow:hidden;
+    }
+    #three-container {
+      position:fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      z-index:0;
+    }
+    .ui-container {
+      position:relative;
+      z-index:1;
+      max-width:420px;
+      margin:0 auto;
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      background:rgba(0,0,0,0.4);
+      /* 스크롤 숨기기 */
+      overflow-y: scroll;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .ui-container::-webkit-scrollbar {
+      display: none;
+    }
+    main {
+      flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    section.metrics {
+      flex-shrink:0;
+      padding:1rem;
+      color:#ccc;
+    }
+    section.metrics h2 {
+      color:#fff;
+      font-weight:600;
+      margin-bottom:0.75rem;
+    }
+    section.metrics ul {
+      list-style: disc inside;
+      font-size:0.875rem;
+      line-height:1.4;
+    }
+    footer {
+      flex-shrink:0;
+      padding:0 1rem 1rem;
+    }
+    .accordion-item {
+      margin-bottom:0.75rem;
+    }
+    .accordion-header {
+      width:100%;
+      background:#1f2937;
+      color:#fff;
+      padding:0.75rem;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      border-radius:0.5rem;
+      cursor:pointer;
+    }
+    .accordion-content {
+      max-height:0;
+      overflow:hidden;
+      transition:max-height 0.3s ease;
+    }
+    .accordion-content.open {
+      max-height:500px;
+    }
+    .option {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      background:#374151;
+      padding:0.75rem;
+      border-radius:0.5rem;
+      margin:0.5rem 0;
+    }
+    .option-info {
+      color:#d1d5db;
+      font-size:0.875rem;
+    }
+    .option-controls {
+      display:flex;
+      align-items:center;
+      gap:0.5rem;
+    }
+    .option-controls button {
+      background:#4b5563;
+      color:#fff;
+      width:1.5rem;
+      height:1.5rem;
+      border-radius:50%;
+    }
+    .total {
+      display:flex;
+      justify-content:space-between;
+      color:#d1d5db;
+      margin-bottom:0.75rem;
+    }
+    .total .amount {
+      color:#fff;
+      font-weight:700;
+      font-size:1.25rem;
+    }
+    .btn {
+      width:100%;
+      padding:0.75rem;
+      background:#fbbf24;
+      color:#000;
+      font-weight:700;
+      border:none;
+      border-radius:0.5rem;
+    }
   </style>
 </head>
 <body>
   <div id="three-container"></div>
+
   <div class="ui-container">
-    <header><h1>온라인 셀프 견적 & 캠페인 관리</h1></header>
+    <!-- 예상 도달 -->
     <main>
-      <div class="infographic text-center">
-        <p class="text-gray-400 mb-1">예상 도달</p>
-        <p id="total-reach" class="text-4xl font-bold text-white">0</p>
-      </div>
-      <div class="infographic">
-        <h2 class="text-white font-semibold mb-2">마케팅 퍼널</h2>
-        <div class="funnel">
-          <div class="level bg-blue-500 w-full h-1/4">노출 <span class="ml-2 text-sm">150K</span></div>
-          <div class="level bg-indigo-500 w-3/4 h-1/4">클릭 <span class="ml-2 text-sm">20K</span></div>
-          <div class="level bg-purple-500 w-1/2 h-1/4">리드 <span class="ml-2 text-sm">1.2K</span></div>
-          <div class="level bg-pink-500 w-1/4 h-1/4">전환 <span class="ml-2 text-sm">500</span></div>
-        </div>
-      </div>
-      <div class="infographic">
-        <h2 class="text-white font-semibold mb-2">핵심 성과 지표</h2>
-        <div class="kpi-grid">
-          <div class="kpi-card"><p class="label">전환율</p><p class="value">6.2%</p></div>
-          <div class="kpi-card"><p class="label">CPC</p><p class="value">₩350</p></div>
-          <div class="kpi-card"><p class="label">월 리드</p><p class="value">1,200</p></div>
-          <div class="kpi-card"><p class="label">ROI</p><p class="value">165%</p></div>
-        </div>
+      <div class="text-center">
+        <p class="text-gray-400 text-lg">예상 도달</p>
+        <p id="total-reach" class="text-7xl font-extrabold text-white">0</p>
       </div>
     </main>
-    <section class="packages">
-      <h2 class="text-white font-semibold mb-2">서비스 패키지</h2>
+
+    <!-- 참고 지표 -->
+    <section class="metrics">
+      <h2>참고 지표</h2>
+      <ul>
+        <li>블로그 리뷰: 평균 노출 1,250회, 클릭률 3.2%</li>
+        <li>인스타 이미지: 평균 노출 30,000회, 참여율 4.8%</li>
+        <li>페이스북 CPM: 평균 노출 50,000회, 전환율 5.5%</li>
+        <li>유튜브 스킵가능: 평균 노출 150,000회, 시청완료율 45%</li>
+      </ul>
+    </section>
+
+    <!-- 서비스 패키지 -->
+    <section class="metrics">
+      <h2>서비스 패키지</h2>
       <div id="accordion-container"></div>
     </section>
+
+    <!-- 총합 & 신청 -->
     <footer>
-      <div class="total"><span>총 합계 (VAT 별도)</span><span class="amount" id="total-price">0원</span></div>
+      <div class="total">
+        <span>총 합계 (VAT 별도)</span>
+        <span class="amount" id="total-price">0원</span>
+      </div>
       <button id="submit-campaign-btn" class="btn" disabled>무료 견적 신청하기</button>
     </footer>
   </div>
 
+  <!-- Three.js 스타필드 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
     let scene, camera, renderer, stars;
     let starGeo, starMat;
     const STAR_COUNT = 20000;
+
     initScene(); animateScene();
+
     function initScene() {
       scene = new THREE.Scene();
       camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 2000);
@@ -88,132 +189,154 @@
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.getElementById('three-container').appendChild(renderer.domElement);
-      window.addEventListener('resize', ()=>{ camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth,window.innerHeight); });
-      starGeo=new THREE.BufferGeometry(); const pos=new Float32Array(STAR_COUNT*3);
-      for(let i=0;i<STAR_COUNT;i++){ pos[i*3]=(Math.random()-0.5)*2000; pos[i*3+1]=(Math.random()-0.5)*2000; pos[i*3+2]=(Math.random()-0.5)*2000; }
-      starGeo.setAttribute('position', new THREE.BufferAttribute(pos,3)); starGeo.setDrawRange(0,0);
-      const sprite=new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/spark1.png');
-      starMat=new THREE.PointsMaterial({ map:sprite, size:2, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.5 });
-      stars=new THREE.Points(starGeo,starMat); scene.add(stars);
+      window.addEventListener('resize', ()=>{
+        camera.aspect = window.innerWidth/window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      starGeo = new THREE.BufferGeometry();
+      const positions = new Float32Array(STAR_COUNT * 3);
+      for (let i = 0; i < STAR_COUNT; i++) {
+        positions[i*3]   = (Math.random() - 0.5) * 2000;
+        positions[i*3+1] = (Math.random() - 0.5) * 2000;
+        positions[i*3+2] = (Math.random() - 0.5) * 2000;
+      }
+      starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      starGeo.setDrawRange(0, 0);
+
+      const sprite = new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/spark1.png');
+      starMat = new THREE.PointsMaterial({ map: sprite, size:2, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.3 });
+
+      stars = new THREE.Points(starGeo, starMat);
+      scene.add(stars);
     }
-    function animateScene(){ const reach=parseInt(document.getElementById('total-reach').textContent.replace(/,/g,''))||0; let ratio=Math.min(reach/300000,1); const eff=0.1+ratio*0.9; starGeo.setDrawRange(0,Math.floor(STAR_COUNT*eff)); starMat.opacity=0.2+0.8*ratio; starMat.size=1+9*ratio; stars.rotation.y+=0.0007; stars.rotation.x+=0.0004; renderer.render(scene,camera); requestAnimationFrame(animateScene);}  
+
+    function animateScene() {
+      const reach = parseInt(document.getElementById('total-reach').textContent.replace(/,/g,'')) || 0;
+      let ratio = Math.min(reach / 150000, 1);
+      // 민감도 증가: 낮은 수치에서도 변화가 잘 보이도록 sqrt 기반 반응
+      let eff = 0.1 + Math.pow(ratio, 0.5) * 0.8;
+
+      starGeo.setDrawRange(0, Math.floor(STAR_COUNT * eff));
+      // 투명도 및 크기도 비례 확대
+      starMat.opacity = 0.1 + 0.6 * ratio;
+      starMat.size    = 1 + 6 * ratio;
+
+      stars.rotation.y += 0.0005;
+      stars.rotation.x += 0.0003;
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(animateScene);
+    }
+    }
   </script>
 
+  <!-- Campaign Builder Logic -->
   <script>
-    document.addEventListener('DOMContentLoaded',()=>{
-      const productsData={
-        '블로그 콘텐츠':{ name:'블로그 콘텐츠', items:[
-          { id:'blog-1', name:'단일 리뷰 포스트',      price:150000, reach:1200 },
-          { id:'blog-3', name:'콘텐츠 패키지 (3개)',  price:400000, reach:3500 },
-          { id:'blog-5', name:'프리미엄 캠페인 (5개)', price:600000, reach:6000 }
-        ]},
-        '인스타그램 콘텐츠':{ name:'인스타그램 콘텐츠', items:[
-          { id:'insta-static', name:'정적 이미지 포스트',       price:200000, reach:30000 },
-          { id:'insta-story',  name:'스토리 광고 (5회)',       price:250000, reach:40000 },
-          { id:'insta-reels',  name:'Reels 숏폼 광고',        price:500000, reach:80000 },
-          { id:'insta-combo',  name:'풀 콤보 패키지',         price:800000, reach:120000 }
-        ]},
-        '페이스북 광고':{ name:'페이스북 광고', items:[
-          { id:'fb-cpm',  name:'피드 CPM 캠페인',      price:300000, reach:50000 },
-          { id:'fb-cpc',  name:'동영상 CPM 캠페인',    price:450000, reach:70000 },
-          { id:'fb-lead', name:'리드 폼 광고',         price:500000, reach:60000 }
-        ]},
-        '유튜브 브랜딩':{ name:'유튜브 브랜딩', items:[
-          { id:'yt-bumper',    name:'6초 Bumper 광고',        price:500000, reach:80000 },
-          { id:'yt-skippable', name:'스킵 가능 프리롤',      price:900000, reach:150000 },
-          { id:'yt-noskip',    name:'스킵 불가 프리롤',      price:1100000, reach:120000 }
-        ]}
+    document.addEventListener('DOMContentLoaded', () => {
+      const productsData = {
+        '블로그 리뷰': [
+          {id:'blog-1', name:'단일 리뷰 포스트', price:150000, reach:1200},
+          {id:'blog-3', name:'3개 묶음 리뷰', price:400000, reach:3500},
+          {id:'blog-5', name:'5개 묶음 리뷰', price:600000, reach:6000}
+        ],
+        '인스타 이미지': [
+          {id:'insta-static', name:'정적 이미지 포스트', price:200000, reach:30000},
+          {id:'insta-story', name:'스토리 광고(5회)', price:250000, reach:40000},
+          {id:'insta-reels', name:'Reels 숏폼 광고', price:500000, reach:80000}
+        ],
+        '페이스북': [
+          {id:'fb-cpm', name:'피드 CPM 캠페인', price:300000, reach:50000},
+          {id:'fb-cpc', name:'동영상 CPM 캠페인', price:450000, reach:70000},
+          {id:'fb-lead', name:'리드 폼 광고', price:500000, reach:60000}
+        ],
+        '유튜브': [
+          {id:'yt-bumper', name:'6초 Bumper 광고', price:500000, reach:80000},
+          {id:'yt-skippable', name:'스킵 가능 프리롤', price:900000, reach:150000},
+          {id:'yt-noskip', name:'스킵 불가 프리롤', price:1100000, reach:120000}
+        ]
       };
-      const cart={};
-      const accordionContainer=document.getElementById('accordion-container');
-      const totalReachEl=document.getElementById('total-reach');
-      const totalPriceEl=document.getElementById('total-price');
-      const submitBtn=document.getElementById('submit-campaign-btn');
+      const cart = {};
+      const accordionContainer = document.getElementById('accordion-container');
+      const totalReachEl = document.getElementById('total-reach');
+      const totalPriceEl = document.getElementById('total-price');
+      const submitBtn = document.getElementById('submit-campaign-btn');
 
-      function renderAccordion(){
-        let html='';
-        for(const key in productsData){
-          const ch=productsData[key];
-          let itemsHtml='';
-          ch.items.forEach(p=>{
-            const qty=cart[p.id]||0;
-            itemsHtml+=
-              `<div class="option">
-                <div class="option-info">
-                  <p>${p.name}</p>
-                  <span>|| ${p.reach.toLocaleString()} 도달</span>
-                </div>
-                <div class="option-controls">
-                  <button data-id="${p.id}">−</button>
-                  <span>${qty}</span>
-                  <button data-id="${p.id}">＋</button>
-                </div>
-              </div>`;
+      function renderAccordion() {
+        let html = '';
+        for (let category in productsData) {
+          html += `<div class="accordion-item">`;
+          html += `<div class="accordion-header"><span>${category}</span><svg class="w-5 h-5 text-gray-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></div>`;
+          html += `<div class="accordion-content">`;
+          productsData[category].forEach(item => {
+            const qty = cart[item.id] || 0;
+            html += `<div class="option"><div class="option-info"><p>${item.name}</p><span>|| ${item.reach.toLocaleString()} 도달</span></div><div class="option-controls"><button data-id="${item.id}">−</button><span>${qty}</span><button data-id="${item.id}">＋</button></div></div>`;
           });
-          html+=
-            `<div class="accordion-item">
-              <button class="accordion-header">
-                <span>${ch.name}</span>
-                <svg class="w-5 h-5 text-gray-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-              </button>
-              <div class="accordion-content">${itemsHtml}</div>
-            </div>`;
+          html += `</div></div>`;
         }
-        accordionContainer.innerHTML=html;
+        accordionContainer.innerHTML = html;
         attachListeners();
       }
 
-      function attachListeners(){
-        document.querySelectorAll('.accordion-header').forEach(header=>{
-          header.addEventListener('click',()=>{
-            const content=header.nextElementSibling;
-            const icon=header.querySelector('svg');
-            document.querySelectorAll('.accordion-content.open').forEach(open=>{
-              if(open!==content){ open.classList.remove('open'); open.previousElementSibling.querySelector('svg').classList.remove('rotate-180'); }
+      function attachListeners() {
+        document.querySelectorAll('.accordion-header').forEach(header => {
+          header.addEventListener('click', () => {
+            const content = header.nextElementSibling;
+            const icon = header.querySelector('svg');
+            document.querySelectorAll('.accordion-content.open').forEach(open => {
+              if (open !== content) {
+                open.classList.remove('open');
+                open.previousElementSibling.querySelector('svg').classList.remove('rotate-180');
+              }
             });
             content.classList.toggle('open');
             icon.classList.toggle('rotate-180');
           });
         });
-        document.querySelectorAll('.option-controls button').forEach(btn=>{
-          btn.addEventListener('click',e=>{
+        document.querySelectorAll('.option-controls button').forEach(btn => {
+          btn.addEventListener('click', e => {
             e.stopPropagation();
-            const id=btn.dataset.id;
-            if(btn.textContent==='＋'){
-              cart[id]=(cart[id]||0)+1;
-            } else if(cart[id]>0) {
+            const id = btn.dataset.id;
+            if (btn.textContent === '＋') {
+              cart[id] = (cart[id]||0) + 1;
+            } else if (cart[id] > 0) {
               cart[id]--;
-              if(!cart[id]) delete cart[id];
+              if (!cart[id]) delete cart[id];
             }
-            btn.parentElement.querySelector('span').textContent=cart[id]||0;
+            btn.parentElement.querySelector('span').textContent = cart[id] || 0;
             updateTotals();
           });
         });
       }
 
       let raf;
-      function animateReach(end){
-        const start=parseInt(totalReachEl.textContent.replace(/,/g,''))||0;
-        if(start===end) return;
-        const dur=800; let st;
-        function step(ts){
-          if(!st) st=ts;
-          const p=Math.min((ts-st)/dur,1);
-          totalReachEl.textContent=Math.floor(p*(end-start)+start).toLocaleString();
-          if(p<1) raf=requestAnimationFrame(step);
+      function animateReach(end) {
+        const start = parseInt(totalReachEl.textContent.replace(/,/g,'')) || 0;
+        if (start === end) return;
+        const dur = 800; let st;
+        function step(ts) {
+          if (!st) st = ts;
+          const p = Math.min((ts - st)/dur, 1);
+          totalReachEl.textContent = Math.floor(p*(end - start) + start).toLocaleString();
+          if (p < 1) raf = requestAnimationFrame(step);
         }
         cancelAnimationFrame(raf);
-        raf=requestAnimationFrame(step);
+        raf = requestAnimationFrame(step);
       }
 
-      function updateTotals(){
-        let price=0, reach=0;
-        for(const id in cart){ price+=productsData[findCategory(id)].items.find(x=>x.id===id).price*cart[id]; reach+=productsData[findCategory(id)].items.find(x=>x.id===id).reach*cart[id]; }
-        totalPriceEl.textContent=`${price.toLocaleString()}원`;
-        submitBtn.disabled=price===0;
+      function updateTotals() {
+        let price = 0, reach = 0;
+        for (let id in cart) {
+          price += productsData[Object.keys(productsData).find(cat => productsData[cat].some(i => i.id === id))]
+                   .find(i => i.id === id).price * cart[id];
+          reach += productsData[Object.keys(productsData).find(cat => productsData[cat].some(i => i.id === id))]
+                   .find(i => i.id === id).reach * cart[id];
+        }
+        totalPriceEl.textContent = `${price.toLocaleString()}원`;
+        submitBtn.disabled = price === 0;
         animateReach(reach);
       }
-      function findCategory(pid){ return Object.values(productsData).find(cat=>cat.items.some(x=>x.id===pid)).name; }
 
       renderAccordion();
       updateTotals();
