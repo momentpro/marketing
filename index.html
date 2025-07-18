@@ -58,7 +58,6 @@
     </section>
     <section class="services">
       <h2>서비스 선택</h2>
-      <!-- Accordion by category -->
       <div id="service-accordion"></div>
     </section>
     <footer>
@@ -72,146 +71,155 @@
   <script>
     let scene, camera, renderer, starGeo, starMat, stars;
     const STAR_COUNT = 30000;
-    initStarfield(); animateStarfield();
     function initStarfield(){
-      scene=new THREE.Scene(); camera=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,1,2000); camera.position.z=200;
-      renderer=new THREE.WebGLRenderer({alpha:true,antialias:true}); renderer.setSize(window.innerWidth,window.innerHeight); renderer.setPixelRatio(window.devicePixelRatio);
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 2000);
+      camera.position.z = 200;
+      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
       document.getElementById('three-container').appendChild(renderer.domElement);
-      window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
-      starGeo=new THREE.BufferGeometry();const pos=new Float32Array(STAR_COUNT*3);
-      for(let i=0;i<STAR_COUNT;i++){pos[i*3]=(Math.random()-0.5)*2000;pos[i*3+1]=(Math.random()-0.5)*2000;pos[i*3+2]=(Math.random()-0.5)*2000;}
-      starGeo.setAttribute('position',new THREE.BufferAttribute(pos,3));starGeo.setDrawRange(0,0);
-      const sprite=new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/spark1.png');
-      starMat=new THREE.PointsMaterial({map:sprite,size:1.5,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0.2});
-      stars=new THREE.Points(starGeo,starMat);scene.add(stars);
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth/window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+      starGeo = new THREE.BufferGeometry();
+      const pos = new Float32Array(STAR_COUNT * 3);
+      for(let i=0; i<STAR_COUNT; i++){
+        pos[i*3]   = (Math.random()-0.5)*2000;
+        pos[i*3+1] = (Math.random()-0.5)*2000;
+        pos[i*3+2] = (Math.random()-0.5)*2000;
+      }
+      starGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+      starGeo.setDrawRange(0,0);
+      const sprite = new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/spark1.png');
+      starMat = new THREE.PointsMaterial({ map: sprite, size: 1.5, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.2 });
+      stars = new THREE.Points(starGeo, starMat);
+      scene.add(stars);
     }
-    function updateStarfield(reach){const r=Math.min(reach/150000,1);const eff=0.1+Math.sqrt(r)*0.9;starGeo.setDrawRange(0,Math.floor(STAR_COUNT*eff));starMat.opacity=0.2+0.6*r;starMat.size=1+4*r;}
-    function animateStarfield(){stars.rotation.y+=0.0005;renderer.render(scene,camera);requestAnimationFrame(animateStarfield);}
+    function updateStarfieldByPrice(price) {
+      // 예산에 따른 그래픽 반응: 0~3백만원 구간 집중, 그 이상은 최대
+      const maxBudget = 3000000; // 3,000,000원
+      const ratio = Math.min(price / maxBudget, 1);
+      const eff = 0.1 + ratio * 0.9; // 0.1~1.0 선형 매핑
+      starGeo.setDrawRange(0, Math.floor(STAR_COUNT * eff));
+      starMat.opacity = 0.2 + 0.6 * ratio;
+      starMat.size    = 1 + 4 * ratio;
+    }
+
+    function animateStarfield(){
+      stars.rotation.y += 0.0005;
+      renderer.render(scene, camera);
+      requestAnimationFrame(animateStarfield);
+    }(){
+      stars.rotation.y += 0.0005;
+      renderer.render(scene, camera);
+      requestAnimationFrame(animateStarfield);
+    }
+    initStarfield(); animateStarfield();
   </script>
 
   <!-- Arc Canvas -->
   <script>
-    const canvas=document.getElementById('arc-canvas'),ctx=canvas.getContext('2d');let targetProgress=0,currentProgress=0,orbRot=0;
-    function resize(){canvas.width=innerWidth;canvas.height=innerHeight;}window.addEventListener('resize',resize);resize();
-    function updateGraphic(reach){const r=Math.min(reach/150000,1);const sigma=1/(1+Math.exp(-8*(r-0.4)));targetProgress=0.1+sigma*0.8;updateStarfield(reach);}
-    function drawArc(){ctx.clearRect(0,0,canvas.width,canvas.height);currentProgress+=(targetProgress-currentProgress)*0.07;const cx=canvas.width/2,cy=canvas.height/2,rad=canvas.width*0.85;
-      if(currentProgress>0.02){const s=Math.PI*1.2,e=s+Math.PI*0.6*currentProgress,g=ctx.createLinearGradient(cx-rad,cy,cx+rad,cy);g.addColorStop(0,'#60a5fa');g.addColorStop(0.5,'#f472b6');g.addColorStop(1,'#fb923c');ctx.beginPath();ctx.arc(cx,canvas.height*0.85,rad,s,e);ctx.strokeStyle=g;ctx.lineWidth=8;ctx.lineCap='round';ctx.shadowBlur=20;ctx.shadowColor='rgba(255,255,255,0.3)';ctx.stroke();ctx.shadowBlur=0;}
-      if(currentProgress>0.02){const s=Math.PI*0.2,e=s+Math.PI*0.6*currentProgress,g=ctx.createLinearGradient(cx-rad,cy,cx+rad,cy);g.addColorStop(0,'#fb923c');g.addColorStop(0.5,'#f472b6');g.addColorStop(1,'#60a5fa');ctx.beginPath();ctx.arc(cx,canvas.height*0.15,rad,s,e);ctx.strokeStyle=g;ctx.lineWidth=8;ctx.lineCap='round';ctx.shadowBlur=20;ctx.shadowColor='rgba(255,255,255,0.3)';ctx.stroke();ctx.shadowBlur=0;}
-      orbRot+=0.015;const ox=cx+Math.cos(orbRot)*50,oy=canvas.height*0.2+Math.sin(orbRot*2)*6,og=ctx.createRadialGradient(ox,oy,5,ox,oy,25);og.addColorStop(0,'#f87171');og.addColorStop(1,'#60a5fa');ctx.beginPath();ctx.arc(ox,oy,15,0,Math.PI*2);ctx.fillStyle=og;ctx.fill();requestAnimationFrame(drawArc);}drawArc();
+    (function(){
+      const canvas = document.getElementById('arc-canvas');
+      const arcCtx = canvas.getContext('2d');
+      let targetProgress = 0, currentProgress = 0, orbRot = 0;
+      function resizeCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      window.updateGraphic = function(reach){
+        const r = Math.min(reach/150000,1);
+        const sigma = 1/(1+Math.exp(-8*(r-0.4)));
+        targetProgress = 0.1 + sigma*0.8;
+        updateStarfield(reach);
+      };
+
+      function drawArc(){
+        arcCtx.clearRect(0,0,canvas.width,canvas.height);
+        currentProgress += (targetProgress-currentProgress)*0.07;
+        const cx=canvas.width/2, cy=canvas.height/2, rad=canvas.width*0.85;
+        if(currentProgress>0.02){
+          const s=Math.PI*1.2, e=s+Math.PI*0.6*currentProgress;
+          const g=arcCtx.createLinearGradient(cx-rad, cy, cx+rad, cy);
+          g.addColorStop(0,'#60a5fa'); g.addColorStop(0.5,'#f472b6'); g.addColorStop(1,'#fb923c');
+          arcCtx.beginPath(); arcCtx.arc(cx, canvas.height*0.85, rad, s, e);
+          arcCtx.strokeStyle = g; arcCtx.lineWidth = 8; arcCtx.lineCap = 'round'; arcCtx.shadowBlur = 20; arcCtx.shadowColor = 'rgba(255,255,255,0.3)';
+          arcCtx.stroke(); arcCtx.shadowBlur = 0;
+        }
+        if(currentProgress>0.02){
+          const s=Math.PI*0.2, e=s+Math.PI*0.6*currentProgress;
+          const g=arcCtx.createLinearGradient(cx-rad, cy, cx+rad, cy);
+          g.addColorStop(0,'#fb923c'); g.addColorStop(0.5,'#f472b6'); g.addColorStop(1,'#60a5fa');
+          arcCtx.beginPath(); arcCtx.arc(cx, canvas.height*0.15, rad, s, e);
+          arcCtx.strokeStyle = g; arcCtx.lineWidth = 8; arcCtx.lineCap = 'round'; arcCtx.shadowBlur = 20; arcCtx.shadowColor = 'rgba(255,255,255,0.3)';
+          arcCtx.stroke(); arcCtx.shadowBlur = 0;
+        }
+        orbRot += 0.015;
+        const ox = cx + Math.cos(orbRot)*50;
+        const oy = canvas.height*0.2 + Math.sin(orbRot*2)*6;
+        const og = arcCtx.createRadialGradient(ox,oy,5,ox,oy,25);
+        og.addColorStop(0,'#f87171'); og.addColorStop(1,'#60a5fa');
+        arcCtx.beginPath(); arcCtx.arc(ox,oy,15,0,Math.PI*2);
+        arcCtx.fillStyle = og; arcCtx.fill();
+        requestAnimationFrame(drawArc);
+      }
+      drawArc();
+    })();
   </script>
 
   <!-- Campaign Builder Logic -->
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const products = [
-      { cat: '블로그 리뷰', id: 'blog-1', name: '단일 리뷰 포스트', price: 150000, reach: 1200 },
-      { cat: '블로그 리뷰', id: 'blog-3', name: '3개 묶음 리뷰', price: 400000, reach: 3500 },
-      { cat: '블로그 리뷰', id: 'blog-5', name: '5개 묶음 리뷰', price: 600000, reach: 6000 },
-      { cat: '인스타 이미지', id: 'insta-static', name: '정적 이미지 포스트', price: 200000, reach: 30000 },
-      { cat: '인스타 이미지', id: 'insta-story', name: '스토리 광고(5회)', price: 250000, reach: 40000 },
-      { cat: '인스타 이미지', id: 'insta-reels', name: 'Reels 숏폼 광고', price: 500000, reach: 80000 },
-      { cat: '페이스북', id: 'fb-cpm', name: '피드 CPM 캠페인', price: 300000, reach: 50000 },
-      { cat: '페이스북', id: 'fb-cpc', name: '동영상 CPM 캠페인', price: 450000, reach: 70000 },
-      { cat: '페이스북', id: 'fb-lead', name: '리드 폼 광고', price: 500000, reach: 60000 },
-      { cat: '유튜브', id: 'yt-bumper', name: '6초 Bumper 광고', price: 500000, reach: 80000 },
-      { cat: '유튜브', id: 'yt-skippable', name: '스킵 가능 프리롤', price: 900000, reach: 150000 },
-      { cat: '유튜브', id: 'yt-noskip', name: '스킵 불가 프리롤', price: 1100000, reach: 120000 }
-    ];
-    const cart = {};
-    const acc = document.getElementById('service-accordion');
-    const totalReachEl = document.getElementById('total-reach');
-    const totalPriceEl = document.getElementById('total-price');
-    const submitBtn = document.getElementById('submit-campaign-btn');
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const products = [
+        { cat: '블로그 리뷰', id: 'blog-1', name: '단일 리뷰 포스트', price: 150000, reach: 1200 },
+        { cat: '블로그 리뷰', id: 'blog-3', name: '3개 묶음 리뷰', price: 400000, reach: 3500 },
+        { cat: '블로그 리뷰', id: 'blog-5', name: '5개 묶음 리뷰', price: 600000, reach: 6000 },
+        { cat: '인스타 이미지', id: 'insta-static', name: '정적 이미지 포스트', price: 200000, reach: 30000 },
+        { cat: '인스타 이미지', id: 'insta-story', name: '스토리 광고(5회)', price: 250000, reach: 40000 },
+        { cat: '인스타 이미지', id: 'insta-reels', name: 'Reels 숏폼 광고', price: 500000, reach: 80000 },
+        { cat: '페이스북', id: 'fb-cpm', name: '피드 CPM 캠페인', price: 300000, reach: 50000 },
+        { cat: '페이스북', id: 'fb-cpc', name: '동영상 CPM 캠페인', price: 450000, reach: 70000 },
+        { cat: '페이스북', id: 'fb-lead', name: '리드 폼 광고', price: 500000, reach: 60000 },
+        { cat: '유튜브', id: 'yt-bumper', name: '6초 Bumper 광고', price: 500000, reach: 80000 },
+        { cat: '유튜브', id: 'yt-skippable', name: '스킵 가능 프리롤', price: 900000, reach: 150000 },
+        { cat: '유튜브', id: 'yt-noskip', name: '스킵 불가 프리롤', price: 1100000, reach: 120000 }
+      ];
+      const cart = {};
+      const acc = document.getElementById('service-accordion');
+      const totalReachEl = document.getElementById('total-reach');
+      const totalPriceEl = document.getElementById('total-price');
+      const submitBtn = document.getElementById('submit-campaign-btn');
 
-    // 카테고리 목록
-    const categories = [...new Set(products.map(p => p.cat))];
-    // 아코디언 생성
-    categories.forEach(cat => {
-      const item = document.createElement('div');
-      item.className = 'accordion-item';
-      item.innerHTML = `
-        <div class="accordion-header">
-          <span>${cat}</span>
-          <svg class="w-5 h-5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-          </svg>
-        </div>
-        <div class="accordion-content">
-          <div class="services-grid"></div>
-        </div>
-      `;
-      acc.appendChild(item);
-    });
-
-    // 서비스 카드 추가
-    const accItems = Array.from(document.querySelectorAll('#service-accordion .accordion-item'));
-    products.forEach(p => {
-      const idx = categories.indexOf(p.cat);
-      const grid = accItems[idx].querySelector('.services-grid');
-      const card = document.createElement('div');
-      card.className = 'service-card';
-      card.innerHTML = `
-        <h3>${p.name}</h3>
-        <p>1명 당 ${p.reach.toLocaleString()}회 도달<br>${p.price.toLocaleString()}원</p>
-        <div class="service-controls">
-          <button data-id="${p.id}" class="decrease">-</button>
-          <input type="number" min="0" value="0" data-id="${p.id}" class="quantity" />
-          <button data-id="${p.id}" class="increase">+</button>
-        </div>
-      `;
-      grid.appendChild(card);
-    });
-
-    // 이벤트 핸들러
-    document.querySelectorAll('.accordion-header').forEach(header => {
-      header.addEventListener('click', () => {
-        const content = header.nextElementSibling;
-        const icon = header.querySelector('svg');
-        document.querySelectorAll('.accordion-content.open').forEach(open => {
-          if (open !== content) {
-            open.classList.remove('open');
-            open.previousElementSibling.querySelector('svg').classList.remove('rotate-180');
-          }
-        });
-        content.classList.toggle('open');
-        icon.classList.toggle('rotate-180');
+      const categories = [...new Set(products.map(p => p.cat))];
+      categories.forEach(cat => {
+        const item = document.createElement('div');
+        item.className = 'accordion-item';
+        item.innerHTML = `
+          <div class="accordion-header">
+            <span>${cat}</span>
+            <svg class="w-5 h-5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </div>
+          <div class="accordion-content">
+            <div class="services-grid"></div>
+          </div>
+        `;
+        acc.appendChild(item);
       });
-    });
-    document.querySelectorAll('.decrease').forEach(btn => btn.addEventListener('click', () => changeQty(btn.dataset.id, -1)));
-    document.querySelectorAll('.increase').forEach(btn => btn.addEventListener('click', () => changeQty(btn.dataset.id, 1)));
-    document.querySelectorAll('.quantity').forEach(input => input.addEventListener('input', () => setQty(input.dataset.id, parseInt(input.value) || 0)));
 
-    let raf;
-    function changeQty(id, delta) {
-      setQty(id, (cart[id] || 0) + delta);
-    }
-    function setQty(id, qty) {
-      cart[id] = Math.max(qty, 0);
-      document.querySelector(`.quantity[data-id="${id}"]`).value = cart[id];
-      calculate();
-    }
-    function calculate() {
-      let totalPrice = 0, totalReach = 0;
-      Object.keys(cart).forEach(id => {
-        const item = products.find(x => x.id === id);
-        totalPrice += item.price * cart[id];
-        totalReach += item.reach * cart[id];
-      });
-      totalPriceEl.textContent = `${totalPrice.toLocaleString()}원`;
-      submitBtn.disabled = totalPrice === 0;
-      // 숫자 애니메이션
-      const start = parseInt(totalReachEl.textContent.replace(/,/g,'')) || 0;
-      const end = totalReach;
-      cancelAnimationFrame(raf);
-      let st;
-      function step(ts) {
-        if (!st) st = ts;
-        const p = Math.min((ts - st) / 600, 1);
-        totalReachEl.textContent = Math.floor(p * (end - start) + start).toLocaleString();
-        if (p < 1) raf = requestAnimationFrame(step);
-      }
-      raf = requestAnimationFrame(step);
-      updateGraphic(totalReach);
-    }
-  });
-</script>
+      const accItems = Array.from(document.querySelectorAll('#service-accordion .accordion-item'));
+      products.forEach(p => {
+        const idx = categories.indexOf(p.cat);
+        const grid = accItems[idx].querySelector('.services-grid');
+        const card = document.createElement('div');
+        card.className = 'service-card';
+        card.innerHTML = `
+          <h3>${p.name}</h3>
+          <p>1명 당 ${p.reach.toLocaleString()}회 도달<br>${p.price.toLocaleString()}원</p>
+          <div class="service-controls">
+            <button data-id="${p.id}" class="decrease">-</button>
+            <input type="number" min="0" value="```
