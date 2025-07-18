@@ -41,18 +41,24 @@
       </div>
     </main>
     <section class="metrics">
-      <h2>전환 퍼널 및 비용</h2>
-      <ul>
-        <li>노출 → 클릭 → 리드 → 구매</li>
-        <li>클릭당 비용 (CPC): 약 ₩350</li>
-        <li>전환율: 평균 6.2%</li>
-        <li>예상 리드당 비용: 약 ₩5,600</li>
-      </ul>
+      <h2>서비스 선택</h2>
+      <div class="grid grid-cols-1 gap-4 p-4">
+        <!-- 반복되는 서비스 카드 -->
+        <template id="service-card-template">
+          <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+            <h3 class="text-white font-semibold mb-1">{{name}}</h3>
+            <p class="text-gray-400 text-sm mb-2">1명 당 {{reach.toLocaleString()}}회 도달 / {{price.toLocaleString()}}원</p>
+            <div class="flex items-center">
+              <button class="decrease bg-gray-700 text-white w-8 h-8 rounded-l-lg">-</button>
+              <input type="number" min="0" value="0" class="quantity w-16 text-center bg-gray-900 text-white" />
+              <button class="increase bg-blue-600 text-white w-8 h-8 rounded-r-lg">+</button>
+            </div>
+          </div>
+        </template>
+        <div id="service-cards"></div>
+      </div>
     </section>
-    <section class="metrics">
-      <h2>서비스 패키지</h2>
-      <div id="accordion-container"></div>
-    </section>
+    <!-- 총합 & 신청 -->
     <footer>
       <div class="total">
         <span>총 합계 (VAT 별도)</span>
