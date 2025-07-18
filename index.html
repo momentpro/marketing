@@ -223,20 +223,30 @@
     }
 
     function animateScene() {
-      const reach = parseInt(document.getElementById('total-reach').textContent.replace(/,/g,'')) || 0;
-      let ratio = Math.min(reach / 150000, 1);
-      // 낮은 수치에서도 변화가 잘 보이도록 sqrt 사용
-      let eff = 0.1 + Math.sqrt(ratio) * 0.8;
+      // 예산 기반 민감도 조절 (100만원 이하 구간 집중)
+      const priceText = document.getElementById('total-price').textContent;
+      const price = parseInt(priceText.replace(/[^0-9]/g, ''), 10) || 0;
+      const ratioSpend = Math.min(price / 2500000, 1);
+      let eff;
+      if (ratioSpend <= 0.4) {
+        // 0 ~ 40% 구간: 0.1 -> 0.8
+        eff = 0.1 + (ratioSpend / 0.4) * 0.7;
+      } else {
+        // 40% ~ 100% 구간: 0.8 -> 1.0
+        eff = 0.8 + ((ratioSpend - 0.4) / 0.6) * 0.2;
+      }
 
       starGeo.setDrawRange(0, Math.floor(STAR_COUNT * eff));
-      starMat.opacity = 0.1 + 0.6 * ratio;
-      starMat.size    = 1.5 + 5 * ratio;
+      // opacity, size도 예산 비율로 조정
+      starMat.opacity = 0.1 + 0.6 * ratioSpend;
+      starMat.size    = 1.5 + 5 * ratioSpend;
 
       stars.rotation.y += 0.0005;
       stars.rotation.x += 0.0003;
 
       renderer.render(scene, camera);
       requestAnimationFrame(animateScene);
+    }
     }
   </script>
 
