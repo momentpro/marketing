@@ -118,10 +118,86 @@
   </script>
 
   <!-- Campaign Builder Logic -->
-  <script>
-    document.addEventListener('DOMContentLoaded',()=>{
-      const productsData={ '블로그 리뷰':[{id:'blog-1',name:'단일 리뷰 포스트',price:150000,reach:1200},{id:'blog-3',name:'3개 묶음 리뷰',price:400000,reach:3500},{id:'blog-5',name:'5개 묶음 리뷰',price:600000,reach:6000}], '인스타 이미지':[{id:'insta-static',name:'정적 이미지 포스트',price:200000,reach:30000},{id:'insta-story',name:'스토리 광고(5회)',price:250000,reach:40000},{id:'insta-reels',name:'Reels 숏폼 광고',price:500000,reach:80000}], '페이스북':[{id:'fb-cpm',name:'피드 CPM 캠페인',price:300000,reach:50000},{id:'fb-cpc',name:'동영상 CPM 캠페인',price:450000,reach:70000},{id:'fb-lead',name:'리드 폼 광고',price:500000,reach:60000}], '유튜브':[{id:'yt-bumper',name:'6초 Bumper 광고',price:500000,reach:80000},{id:'yt-skippable',name:'스킵 가능 프리롤',price:900000,reach:150000},{id:'yt-noskip',name:'스킵 불가 프리롤',price:1100000,reach:120000}] };
-      const cart={}, acc=document.getElementById('accordion-container'), totalReachEl=document.getElementById('total-reach'), totalPriceEl=document.getElementById('total-price'), submitBtn=document.getElementById('submit-campaign-btn');
-      let raf;
-      function animateReach(end){ const start=parseInt(totalReachEl.textContent.replace(/,/g,''))||0; if(start===end)return; const dur=600; let st; function step(ts){ if(!st)st=ts; const p=Math.min((ts-st)/dur,1); totalReachEl.textContent=Math.floor(p*(end-start)+start).toLocaleString(); if(p<1)raf=requestAnimationFrame(step);} cancelAnimationFrame(raf); raf=requestAnimationFrame(step); }
-      function renderAccordion(){ let html=''; for(let cat in productsData){ html+=`<div class='accordion-item'><div class='accordion-header'><span>${cat}</span><svg class='w-5 h-5 transition-transform' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round'
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // 상품 데이터
+    const productsData = [
+      { category: '블로그 리뷰', id: 'blog-1', name: '단일 리뷰 포스트', price: 150000, reach: 1200 },
+      { category: '블로그 리뷰', id: 'blog-3', name: '3개 묶음 리뷰', price: 400000, reach: 3500 },
+      { category: '블로그 리뷰', id: 'blog-5', name: '5개 묶음 리뷰', price: 600000, reach: 6000 },
+      { category: '인스타 이미지', id: 'insta-static', name: '정적 이미지 포스트', price: 200000, reach: 30000 },
+      { category: '인스타 이미지', id: 'insta-story', name: '스토리 광고(5회)', price: 250000, reach: 40000 },
+      { category: '인스타 이미지', id: 'insta-reels', name: 'Reels 숏폼 광고', price: 500000, reach: 80000 },
+      { category: '페이스북', id: 'fb-cpm', name: '피드 CPM 캠페인', price: 300000, reach: 50000 },
+      { category: '페이스북', id: 'fb-cpc', name: '동영상 CPM 캠페인', price: 450000, reach: 70000 },
+      { category: '페이스북', id: 'fb-lead', name: '리드 폼 광고', price: 500000, reach: 60000 },
+      { category: '유튜브', id: 'yt-bumper', name: '6초 Bumper 광고', price: 500000, reach: 80000 },
+      { category: '유튜브', id: 'yt-skippable', name: '스킵 가능 프리롤', price: 900000, reach: 150000 },
+      { category: '유튜브', id: 'yt-noskip', name: '스킵 불가 프리롤', price: 1100000, reach: 120000 }
+    ];
+    const cart = {};
+    const template = document.getElementById('service-card-template');
+    const container = document.getElementById('service-cards');
+    const totalReachEl = document.getElementById('total-reach');
+    const totalPriceEl = document.getElementById('total-price');
+    const submitBtn = document.getElementById('submit-campaign-btn');
+
+    // 카드 초기화
+    productsData.forEach(item => {
+      const clone = template.content.cloneNode(true);
+      clone.querySelector('h3').textContent = item.name;
+      clone.querySelector('p').innerHTML = `1명 당 ${item.reach.toLocaleString()}회 도달<br>${item.price.toLocaleString()}원`;
+      const decBtn = clone.querySelector('.decrease');
+      const incBtn = clone.querySelector('.increase');
+      const qtyInput = clone.querySelector('.quantity');
+      decBtn.dataset.id = item.id;
+      incBtn.dataset.id = item.id;
+      qtyInput.dataset.id = item.id;
+
+      decBtn.addEventListener('click', () => updateQuantity(item, -1));
+      incBtn.addEventListener('click', () => updateQuantity(item, +1));
+      qtyInput.addEventListener('input', () => setQuantity(item, parseInt(qtyInput.value) || 0));
+
+      container.appendChild(clone);
+    });
+
+    function updateQuantity(item, delta) {
+      const id = item.id;
+      cart[id] = Math.max((cart[id] || 0) + delta, 0);
+      setQuantity(item, cart[id]);
+    }
+    function setQuantity(item, qty) {
+      const id = item.id;
+      cart[id] = qty;
+      const input = document.querySelector(`.quantity[data-id='${id}']`);
+      input.value = qty;
+      calculateTotals();
+    }
+    function calculateTotals() {
+      let totalPrice = 0, totalReach = 0;
+      for (let id in cart) {
+        const item = productsData.find(x => x.id === id);
+        totalPrice += item.price * cart[id];
+        totalReach += item.reach * cart[id];
+      }
+      totalPriceEl.textContent = `${totalPrice.toLocaleString()}원`;
+      submitBtn.disabled = totalPrice === 0;
+      animateReach(totalReach);
+      updateGraphic(totalReach);
+    }
+    let raf;
+    function animateReach(end) {
+      const start = parseInt(totalReachEl.textContent.replace(/,/g,'')) || 0;
+      if (start === end) return;
+      const dur = 600; let st;
+      function step(ts) {
+        if (!st) st = ts;
+        const p = Math.min((ts - st) / dur, 1);
+        totalReachEl.textContent = Math.floor(p * (end - start) + start).toLocaleString();
+        if (p < 1) raf = requestAnimationFrame(step);
+      }
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(step);
+    }
+  });
+</script>
