@@ -37,7 +37,13 @@
     .total { display:flex; justify-content:space-between; color:#9ca3af; margin-bottom:0.5rem; font-size:0.875rem; }
     .total .amount { color:#fff; font-size:1.25rem; font-weight:600; }
     .btn { width:100%; padding:0.75rem; background:#2563eb; color:#fff; font-weight:600; border:none; border-radius:0.5rem; }
-  </style>
+    /* 원형 진행 애니메이션 부드럽게 */
+  .progress-ring__circle {
+    transition: stroke-dashoffset 0.8s ease-out;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+  }
+</style>
 </head>
 <body>
   <div id="three-container"></div>
@@ -48,13 +54,27 @@
       <p id="total-reach" class="value">0</p>
     </main>
     <section class="metrics">
-      <h2>전환 퍼널 & 비용</h2>
-      <ul>
-        <li>노출 → 클릭 → 리드 → 구매</li>
-        <li>CPC: 약 ₩350</li>
-        <li>전환율: 약 6.2%</li>
-        <li>리드당 비용: 약 ₩5,600</li>
-      </ul>
+      <h2>실시간 지표</h2>
+      <div class="metrics-grid grid grid-cols-2 gap-4">
+        <div class="metric-card flex flex-col items-center">
+          <svg class="progress-ring" width="80" height="80">
+            <circle class="progress-ring__circle clicks-ring" stroke="#60a5fa" stroke-width="6" fill="transparent" r="36" cx="40" cy="40"/>
+          </svg>
+          <div class="metric-info text-center mt-2">
+            <p class="metric-label text-gray-400 text-sm">예상 클릭수</p>
+            <p id="metric-clicks" class="metric-value text-white text-lg font-semibold">0</p>
+          </div>
+        </div>
+        <div class="metric-card flex flex-col items-center">
+          <svg class="progress-ring" width="80" height="80">
+            <circle class="progress-ring__circle cpc-ring" stroke="#f472b6" stroke-width="6" fill="transparent" r="36" cx="40" cy="40"/>
+          </svg>
+          <div class="metric-info text-center mt-2">
+            <p class="metric-label text-gray-400 text-sm">클릭당 비용</p>
+            <p id="metric-cpc" class="metric-value text-white text-lg font-semibold">0원</p>
+          </div>
+        </div>
+      </div>
     </section>
     <section class="services">
       <h2>서비스 선택</h2>
@@ -99,20 +119,14 @@
       scene.add(stars);
     }
     function updateStarfieldByPrice(price) {
-      // 예산에 따른 그래픽 반응: 0~3백만원 구간 집중, 그 이상은 최대
-      const maxBudget = 3000000; // 3,000,000원
+      const maxBudget = 3000000;
       const ratio = Math.min(price / maxBudget, 1);
-      const eff = 0.1 + ratio * 0.9; // 0.1~1.0 선형 매핑
+      const eff = 0.1 + ratio * 0.9;
       starGeo.setDrawRange(0, Math.floor(STAR_COUNT * eff));
       starMat.opacity = 0.2 + 0.6 * ratio;
       starMat.size    = 1 + 4 * ratio;
     }
-
     function animateStarfield(){
-      stars.rotation.y += 0.0005;
-      renderer.render(scene, camera);
-      requestAnimationFrame(animateStarfield);
-    }(){
       stars.rotation.y += 0.0005;
       renderer.render(scene, camera);
       requestAnimationFrame(animateStarfield);
@@ -126,44 +140,39 @@
       const canvas = document.getElementById('arc-canvas');
       const arcCtx = canvas.getContext('2d');
       let targetProgress = 0, currentProgress = 0, orbRot = 0;
-      function resizeCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-      window.addEventListener('resize', resizeCanvas);
-      resizeCanvas();
-
+      function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+      window.addEventListener('resize', resize);
+      resize();
       window.updateGraphic = function(reach){
         const r = Math.min(reach/150000,1);
         const sigma = 1/(1+Math.exp(-8*(r-0.4)));
         targetProgress = 0.1 + sigma*0.8;
-        updateStarfield(reach);
+        updateStarfieldByPrice(document.getElementById('total-price').textContent.replace(/[^0-9]/g,'')*1);
       };
-
       function drawArc(){
         arcCtx.clearRect(0,0,canvas.width,canvas.height);
         currentProgress += (targetProgress-currentProgress)*0.07;
-        const cx=canvas.width/2, cy=canvas.height/2, rad=canvas.width*0.85;
+        const cx = canvas.width/2, cy = canvas.height/2, rad = canvas.width*0.85;
         if(currentProgress>0.02){
-          const s=Math.PI*1.2, e=s+Math.PI*0.6*currentProgress;
-          const g=arcCtx.createLinearGradient(cx-rad, cy, cx+rad, cy);
-          g.addColorStop(0,'#60a5fa'); g.addColorStop(0.5,'#f472b6'); g.addColorStop(1,'#fb923c');
+          const s = Math.PI*1.2, e = s + Math.PI*0.6*currentProgress;
+          const grad = arcCtx.createLinearGradient(cx-rad, cy, cx+rad, cy);
+          grad.addColorStop(0,'#60a5fa'); grad.addColorStop(0.5,'#f472b6'); grad.addColorStop(1,'#fb923c');
           arcCtx.beginPath(); arcCtx.arc(cx, canvas.height*0.85, rad, s, e);
-          arcCtx.strokeStyle = g; arcCtx.lineWidth = 8; arcCtx.lineCap = 'round'; arcCtx.shadowBlur = 20; arcCtx.shadowColor = 'rgba(255,255,255,0.3)';
-          arcCtx.stroke(); arcCtx.shadowBlur = 0;
+          arcCtx.strokeStyle = grad; arcCtx.lineWidth = 8; arcCtx.lineCap = 'round'; arcCtx.shadowBlur = 20; arcCtx.shadowColor = 'rgba(255,255,255,0.3)'; arcCtx.stroke(); arcCtx.shadowBlur = 0;
         }
         if(currentProgress>0.02){
-          const s=Math.PI*0.2, e=s+Math.PI*0.6*currentProgress;
-          const g=arcCtx.createLinearGradient(cx-rad, cy, cx+rad, cy);
-          g.addColorStop(0,'#fb923c'); g.addColorStop(0.5,'#f472b6'); g.addColorStop(1,'#60a5fa');
+          const s = Math.PI*0.2, e = s + Math.PI*0.6*currentProgress;
+          const grad = arcCtx.createLinearGradient(cx-rad, cy, cx+rad, cy);
+          grad.addColorStop(0,'#fb923c'); grad.addColorStop(0.5,'#f472b6'); grad.addColorStop(1,'#60a5fa');
           arcCtx.beginPath(); arcCtx.arc(cx, canvas.height*0.15, rad, s, e);
-          arcCtx.strokeStyle = g; arcCtx.lineWidth = 8; arcCtx.lineCap = 'round'; arcCtx.shadowBlur = 20; arcCtx.shadowColor = 'rgba(255,255,255,0.3)';
-          arcCtx.stroke(); arcCtx.shadowBlur = 0;
+          arcCtx.strokeStyle = grad; arcCtx.lineWidth = 8; arcCtx.lineCap = 'round'; arcCtx.shadowBlur = 20; arcCtx.shadowColor = 'rgba(255,255,255,0.3)'; arcCtx.stroke(); arcCtx.shadowBlur = 0;
         }
         orbRot += 0.015;
         const ox = cx + Math.cos(orbRot)*50;
         const oy = canvas.height*0.2 + Math.sin(orbRot*2)*6;
         const og = arcCtx.createRadialGradient(ox,oy,5,ox,oy,25);
         og.addColorStop(0,'#f87171'); og.addColorStop(1,'#60a5fa');
-        arcCtx.beginPath(); arcCtx.arc(ox,oy,15,0,Math.PI*2);
-        arcCtx.fillStyle = og; arcCtx.fill();
+        arcCtx.beginPath(); arcCtx.arc(ox,oy,15,0,Math.PI*2); arcCtx.fillStyle = og; arcCtx.fill();
         requestAnimationFrame(drawArc);
       }
       drawArc();
@@ -172,54 +181,81 @@
 
   <!-- Campaign Builder Logic -->
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', ()=>{
       const products = [
-        { cat: '블로그 리뷰', id: 'blog-1', name: '단일 리뷰 포스트', price: 150000, reach: 1200 },
-        { cat: '블로그 리뷰', id: 'blog-3', name: '3개 묶음 리뷰', price: 400000, reach: 3500 },
-        { cat: '블로그 리뷰', id: 'blog-5', name: '5개 묶음 리뷰', price: 600000, reach: 6000 },
-        { cat: '인스타 이미지', id: 'insta-static', name: '정적 이미지 포스트', price: 200000, reach: 30000 },
-        { cat: '인스타 이미지', id: 'insta-story', name: '스토리 광고(5회)', price: 250000, reach: 40000 },
-        { cat: '인스타 이미지', id: 'insta-reels', name: 'Reels 숏폼 광고', price: 500000, reach: 80000 },
-        { cat: '페이스북', id: 'fb-cpm', name: '피드 CPM 캠페인', price: 300000, reach: 50000 },
-        { cat: '페이스북', id: 'fb-cpc', name: '동영상 CPM 캠페인', price: 450000, reach: 70000 },
-        { cat: '페이스북', id: 'fb-lead', name: '리드 폼 광고', price: 500000, reach: 60000 },
-        { cat: '유튜브', id: 'yt-bumper', name: '6초 Bumper 광고', price: 500000, reach: 80000 },
-        { cat: '유튜브', id: 'yt-skippable', name: '스킵 가능 프리롤', price: 900000, reach: 150000 },
-        { cat: '유튜브', id: 'yt-noskip', name: '스킵 불가 프리롤', price: 1100000, reach: 120000 }
+        {cat:'블로그 리뷰',id:'blog-1',name:'단일 리뷰 포스트',price:150000,reach:1200},
+        {cat:'블로그 리뷰',id:'blog-3',name:'3개 묶음 리뷰',price:400000,reach:3500},
+        {cat:'블로그 리뷰',id:'blog-5',name:'5개 묶음 리뷰',price:600000,reach:6000},
+        {cat:'인스타 이미지',id:'insta-static',name:'정적 이미지 포스트',price:200000,reach:30000},
+        {cat:'인스타 이미지',id:'insta-story',name:'스토리 광고(5회)',price:250000,reach:40000},
+        {cat:'인스타 이미지',id:'insta-reels',name:'Reels 숏폼 광고',price:500000,reach:80000},
+        {cat:'페이스북',id:'fb-cpm',name:'피드 CPM 캠페인',price:300000,reach:50000},
+        {cat:'페이스북',id:'fb-cpc',name:'동영상 CPM 캠페인',price:450000,reach:70000},
+        {cat:'페이스북',id:'fb-lead',name:'리드 폼 광고',price:500000,reach:60000},
+        {cat:'유튜브',id:'yt-bumper',name:'6초 Bumper 광고',price:500000,reach:80000},
+        {cat:'유튜브',id:'yt-skippable',name:'스킵 가능 프리롤',price:900000,reach:150000},
+        {cat:'유튜브',id:'yt-noskip',name:'스킵 불가 프리롤',price:1100000,reach:120000}
       ];
-      const cart = {};
-      const acc = document.getElementById('service-accordion');
-      const totalReachEl = document.getElementById('total-reach');
-      const totalPriceEl = document.getElementById('total-price');
-      const submitBtn = document.getElementById('submit-campaign-btn');
-
-      const categories = [...new Set(products.map(p => p.cat))];
-      categories.forEach(cat => {
-        const item = document.createElement('div');
-        item.className = 'accordion-item';
-        item.innerHTML = `
-          <div class="accordion-header">
-            <span>${cat}</span>
-            <svg class="w-5 h-5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </div>
-          <div class="accordion-content">
-            <div class="services-grid"></div>
-          </div>
-        `;
-        acc.appendChild(item);
+      const cart={}, acc=document.getElementById('service-accordion'), totalReachEl=document.getElementById('total-reach'), totalPriceEl=document.getElementById('total-price'), submitBtn=document.getElementById('submit-campaign-btn');
+      const cats=[...new Set(products.map(p=>p.cat))];
+      cats.forEach(cat=>{
+        const itm=document.createElement('div');itm.className='accordion-item';
+        itm.innerHTML=`<div class='accordion-header'><span>${cat}</span><svg class='w-5 h-5 transition-transform' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/></svg></div><div class='accordion-content'><div class='services-grid'></div></div>`;
+        acc.appendChild(itm);
       });
+      const itemsArray=Array.from(document.querySelectorAll('#service-accordion .accordion-item'));
+      products.forEach(p=>{const i=cats.indexOf(p.cat), grd=itemsArray[i].querySelector('.services-grid'), card=document.createElement('div');card.className='service-card';card.innerHTML=`<h3>${p.name}</h3><p>1명 당 ${p.reach.toLocaleString()}회 도달<br>${p.price.toLocaleString()}원</p><div class='service-controls'><button data-id='${p.id}' class='decrease'>-</button><input type='number' min='0' value='0' data-id='${p.id}' class='quantity'/><button data-id='${p.id}' class='increase'>+</button></div>`;grd.appendChild(card);});
+      document.querySelectorAll('.accordion-header').forEach(h=>h.addEventListener('click',()=>{const c=h.nextElementSibling,i=h.querySelector('svg');document.querySelectorAll('.accordion-content.open').forEach(o=>{if(o!==c){o.classList.remove('open');o.previousElementSibling.querySelector('svg').classList.remove('rotate-180');}});c.classList.toggle('open');i.classList.toggle('rotate-180');}));
+      document.querySelectorAll('.decrease').forEach(b=>b.addEventListener('click',()=>chg(b.dataset.id,-1)));
+      document.querySelectorAll('.increase').forEach(b=>b.addEventListener('click',()=>chg(b.dataset.id,1)));
+      document.querySelectorAll('.quantity').forEach(i=>i.addEventListener('input',()=>setQty(i.dataset.id,parseInt(i.value)||0)));
+      let raf;
+      function chg(id,delta){setQty(id,(cart[id]||0)+delta);}      function setQty(id,qty){cart[id]=Math.max(qty,0);document.querySelector(`.quantity[data-id='${id}']`).value=cart[id];calc();}      function calc() {
+        let tp = 0, tr = 0;
+        for (let id in cart) {
+          const it = products.find(x => x.id === id);
+          tp += it.price * cart[id];
+          tr += it.reach * cart[id];
+        }
+        totalPriceEl.textContent = `${tp.toLocaleString()}원`;
+        submitBtn.disabled = tp === 0;
 
-      const accItems = Array.from(document.querySelectorAll('#service-accordion .accordion-item'));
-      products.forEach(p => {
-        const idx = categories.indexOf(p.cat);
-        const grid = accItems[idx].querySelector('.services-grid');
-        const card = document.createElement('div');
-        card.className = 'service-card';
-        card.innerHTML = `
-          <h3>${p.name}</h3>
-          <p>1명 당 ${p.reach.toLocaleString()}회 도달<br>${p.price.toLocaleString()}원</p>
-          <div class="service-controls">
-            <button data-id="${p.id}" class="decrease">-</button>
-            <input type="number" min="0" value="```
+        // 숫자 애니메이션
+        const start = parseInt(totalReachEl.textContent.replace(/,/g, '')) || 0;
+        const end = tr;
+        cancelAnimationFrame(raf);
+        let st;
+        function step(ts) {
+          if (!st) st = ts;
+          const p = Math.min((ts - st) / 600, 1);
+          totalReachEl.textContent = Math.floor(p * (end - start) + start).toLocaleString();
+          if (p < 1) raf = requestAnimationFrame(step);
+        }
+        raf = requestAnimationFrame(step);
+
+        updateGraphic(tr);
+
+        // 실시간 지표 업데이트
+        const ctr = 0.05;
+        const clicks = Math.floor(tr * ctr);
+        document.getElementById('metric-clicks').textContent = clicks.toLocaleString();
+        const cpc = clicks > 0 ? Math.floor(tp / clicks) : 0;
+        document.getElementById('metric-cpc').textContent = `${cpc.toLocaleString()}원`;
+
+        // 프로그래스 링 애니메이션
+        const ringCirc = 2 * Math.PI * 36;
+        const clickRatio = Math.min(clicks / 7500, 1);
+        const clickRing = document.querySelector('.clicks-ring');
+        clickRing.setAttribute('stroke-dasharray', ringCirc);
+        clickRing.setAttribute('stroke-dashoffset', ringCirc * (1 - clickRatio));
+
+        const cpcMax = 10000; // CPC 최대값
+        const cpcRatio = Math.min(cpc / cpcMax, 1);
+        const cpcRing = document.querySelector('.cpc-ring');
+        cpcRing.setAttribute('stroke-dasharray', ringCirc);
+        cpcRing.setAttribute('stroke-dashoffset', ringCirc * cpcRatio);
+      }  
+    });
+  </script>
+</body>
+</html>
