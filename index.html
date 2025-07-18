@@ -101,47 +101,117 @@
   </script>
 
   <!-- Campaign Builder Logic -->
-  <script>
-    document.addEventListener('DOMContentLoaded',()=>{
-      const products=[
-        {cat:'블로그 리뷰',id:'blog-1',name:'단일 리뷰 포스트',price:150000,reach:1200},
-        {cat:'블로그 리뷰',id:'blog-3',name:'3개 묶음 리뷰',price:400000,reach:3500},
-        {cat:'블로그 리뷰',id:'blog-5',name:'5개 묶음 리뷰',price:600000,reach:6000},
-        {cat:'인스타 이미지',id:'insta-static',name:'정적 이미지 포스트',price:200000,reach:30000},
-        {cat:'인스타 이미지',id:'insta-story',name:'스토리 광고(5회)',price:250000,reach:40000},
-        {cat:'인스타 이미지',id:'insta-reels',name:'Reels 숏폼 광고',price:500000,reach:80000},
-        {cat:'페이스북',id:'fb-cpm',name:'피드 CPM 캠페인',price:300000,reach:50000},
-        {cat:'페이스북',id:'fb-cpc',name:'동영상 CPM 캠페인',price:450000,reach:70000},
-        {cat:'페이스북',id:'fb-lead',name:'리드 폼 광고',price:500000,reach:60000},
-        {cat:'유튜브',id:'yt-bumper',name:'6초 Bumper 광고',price:500000,reach:80000},
-        {cat:'유튜브',id:'yt-skippable',name:'스킵 가능 프리롤',price:900000,reach:150000},
-        {cat:'유튜브',id:'yt-noskip',name:'스킵 불가 프리롤',price:1100000,reach:120000}
-      ];
-      const cart={}, acc=document.getElementById('service-accordion'), totalReachEl=document.getElementById('total-reach'), totalPriceEl=document.getElementById('total-price'), submit=document.getElementById('submit-campaign-btn');
-      // 카테고리 그룹 생성
-      const cats=[...new Set(products.map(p=>p.cat))];
-      cats.forEach(cat=>{
-        const item=document.createElement('div');item.className='accordion-item';
-        item.innerHTML=`<div class='accordion-header'><span>${cat}</span><svg class='w-5 h-5 transition-transform' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/></svg></div><div class='accordion-content'><div class='services-grid'></div></div>`;
-        acc.appendChild(item);
-      });
-      // 각 카테고리에 카드
-      products.forEach(p=>{
-        const content=document.querySelector(`.accordion-content:nth-child(${cats.indexOf(p.cat)+1}) .services-grid`);
-        const card=document.createElement('div');card.className='service-card';
-        card.innerHTML=`<h3>${p.name}</h3><p>1명 당 ${p.reach.toLocaleString()}회 도달<br>${p.price.toLocaleString()}원</p><div class='service-controls'><button data-id='${p.id}' class='decrease'>-</button><input type='number' min='0' value='0' data-id='${p.id}' class='quantity'/><button data-id='${p.id}' class='increase'>+</button></div>`;
-        content.querySelector('.services-grid').appendChild(card);
-      });
-      // 이벤트
-      document.querySelectorAll('.accordion-header').forEach(h=>h.addEventListener('click',()=>{const c=h.nextElementSibling,i=h.querySelector('svg');document.querySelectorAll('.accordion-content.open').forEach(o=>{if(o!==c){o.classList.remove('open');o.previousElementSibling.querySelector('svg').classList.remove('rotate-180');}});c.classList.toggle('open');i.classList.toggle('rotate-180');}));
-      document.querySelectorAll('.decrease').forEach(b=>b.addEventListener('click',()=>chg(b.dataset.id,-1)));
-      document.querySelectorAll('.increase').forEach(b=>b.addEventListener('click',()=>chg(b.dataset.id,1)));
-      document.querySelectorAll('.quantity').forEach(i=>i.addEventListener('input',()=>setQty(i.dataset.id,parseInt(i.value)||0)));
-      let raf;
-      function chg(id,delta){setQty(id,(cart[id]||0)+delta);}
-      function setQty(id,qty){cart[id]=Math.max(qty,0);document.querySelector(`.quantity[data-id='${id}']`).value=cart[id];calc();}
-      function calc(){let tp=0,tr=0;for(let id in cart){const it=products.find(x=>x.id===id);tp+=it.price*cart[id];tr+=it.reach*cart[id];}totalPriceEl.textContent=`${tp.toLocaleString()}원`;submit.disabled=tp===0;const start=parseInt(totalReachEl.textContent.replace(/,/g,''))||0;const end=tr;cancelAnimationFrame(raf);let st;function step(ts){if(!st)st=ts;const p=Math.min((ts-st)/600,1);totalReachEl.textContent=Math.floor(p*(end-start)+start).toLocaleString();if(p<1)raf=requestAnimationFrame(step);}raf=requestAnimationFrame(step);updateGraphic(tr);}  
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const products = [
+      { cat: '블로그 리뷰', id: 'blog-1', name: '단일 리뷰 포스트', price: 150000, reach: 1200 },
+      { cat: '블로그 리뷰', id: 'blog-3', name: '3개 묶음 리뷰', price: 400000, reach: 3500 },
+      { cat: '블로그 리뷰', id: 'blog-5', name: '5개 묶음 리뷰', price: 600000, reach: 6000 },
+      { cat: '인스타 이미지', id: 'insta-static', name: '정적 이미지 포스트', price: 200000, reach: 30000 },
+      { cat: '인스타 이미지', id: 'insta-story', name: '스토리 광고(5회)', price: 250000, reach: 40000 },
+      { cat: '인스타 이미지', id: 'insta-reels', name: 'Reels 숏폼 광고', price: 500000, reach: 80000 },
+      { cat: '페이스북', id: 'fb-cpm', name: '피드 CPM 캠페인', price: 300000, reach: 50000 },
+      { cat: '페이스북', id: 'fb-cpc', name: '동영상 CPM 캠페인', price: 450000, reach: 70000 },
+      { cat: '페이스북', id: 'fb-lead', name: '리드 폼 광고', price: 500000, reach: 60000 },
+      { cat: '유튜브', id: 'yt-bumper', name: '6초 Bumper 광고', price: 500000, reach: 80000 },
+      { cat: '유튜브', id: 'yt-skippable', name: '스킵 가능 프리롤', price: 900000, reach: 150000 },
+      { cat: '유튜브', id: 'yt-noskip', name: '스킵 불가 프리롤', price: 1100000, reach: 120000 }
+    ];
+    const cart = {};
+    const acc = document.getElementById('service-accordion');
+    const totalReachEl = document.getElementById('total-reach');
+    const totalPriceEl = document.getElementById('total-price');
+    const submitBtn = document.getElementById('submit-campaign-btn');
+
+    // 카테고리 목록
+    const categories = [...new Set(products.map(p => p.cat))];
+    // 아코디언 생성
+    categories.forEach(cat => {
+      const item = document.createElement('div');
+      item.className = 'accordion-item';
+      item.innerHTML = `
+        <div class="accordion-header">
+          <span>${cat}</span>
+          <svg class="w-5 h-5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </div>
+        <div class="accordion-content">
+          <div class="services-grid"></div>
+        </div>
+      `;
+      acc.appendChild(item);
     });
-  </script>
-</body>
-</html>
+
+    // 서비스 카드 추가
+    const accItems = Array.from(document.querySelectorAll('#service-accordion .accordion-item'));
+    products.forEach(p => {
+      const idx = categories.indexOf(p.cat);
+      const grid = accItems[idx].querySelector('.services-grid');
+      const card = document.createElement('div');
+      card.className = 'service-card';
+      card.innerHTML = `
+        <h3>${p.name}</h3>
+        <p>1명 당 ${p.reach.toLocaleString()}회 도달<br>${p.price.toLocaleString()}원</p>
+        <div class="service-controls">
+          <button data-id="${p.id}" class="decrease">-</button>
+          <input type="number" min="0" value="0" data-id="${p.id}" class="quantity" />
+          <button data-id="${p.id}" class="increase">+</button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    // 이벤트 핸들러
+    document.querySelectorAll('.accordion-header').forEach(header => {
+      header.addEventListener('click', () => {
+        const content = header.nextElementSibling;
+        const icon = header.querySelector('svg');
+        document.querySelectorAll('.accordion-content.open').forEach(open => {
+          if (open !== content) {
+            open.classList.remove('open');
+            open.previousElementSibling.querySelector('svg').classList.remove('rotate-180');
+          }
+        });
+        content.classList.toggle('open');
+        icon.classList.toggle('rotate-180');
+      });
+    });
+    document.querySelectorAll('.decrease').forEach(btn => btn.addEventListener('click', () => changeQty(btn.dataset.id, -1)));
+    document.querySelectorAll('.increase').forEach(btn => btn.addEventListener('click', () => changeQty(btn.dataset.id, 1)));
+    document.querySelectorAll('.quantity').forEach(input => input.addEventListener('input', () => setQty(input.dataset.id, parseInt(input.value) || 0)));
+
+    let raf;
+    function changeQty(id, delta) {
+      setQty(id, (cart[id] || 0) + delta);
+    }
+    function setQty(id, qty) {
+      cart[id] = Math.max(qty, 0);
+      document.querySelector(`.quantity[data-id="${id}"]`).value = cart[id];
+      calculate();
+    }
+    function calculate() {
+      let totalPrice = 0, totalReach = 0;
+      Object.keys(cart).forEach(id => {
+        const item = products.find(x => x.id === id);
+        totalPrice += item.price * cart[id];
+        totalReach += item.reach * cart[id];
+      });
+      totalPriceEl.textContent = `${totalPrice.toLocaleString()}원`;
+      submitBtn.disabled = totalPrice === 0;
+      // 숫자 애니메이션
+      const start = parseInt(totalReachEl.textContent.replace(/,/g,'')) || 0;
+      const end = totalReach;
+      cancelAnimationFrame(raf);
+      let st;
+      function step(ts) {
+        if (!st) st = ts;
+        const p = Math.min((ts - st) / 600, 1);
+        totalReachEl.textContent = Math.floor(p * (end - start) + start).toLocaleString();
+        if (p < 1) raf = requestAnimationFrame(step);
+      }
+      raf = requestAnimationFrame(step);
+      updateGraphic(totalReach);
+    }
+  });
+</script>
