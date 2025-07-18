@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>캠페인 빌더 v39.3 (버그 수정)</title>
-  <!-- Tailwind CSS -->
+  <title>캠페인 빌더 v40.0 (반응도 개선)</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts: Inter -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     body, html { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#0d0c12; font-family:'Inter',sans-serif; }
@@ -33,11 +31,8 @@
   </style>
 </head>
 <body>
-  <!-- Three.js Starfield -->
   <div id="three-container"></div>
-  <!-- Arc Canvas -->
   <canvas id="arc-canvas"></canvas>
-  <!-- UI -->
   <div class="ui-container">
     <main>
       <div class="text-center">
@@ -85,34 +80,34 @@
       starGeo = new THREE.BufferGeometry();
       const positions = new Float32Array(STAR_COUNT*3);
       for(let i=0;i<STAR_COUNT;i++){ positions[i*3]=(Math.random()-0.5)*2000; positions[i*3+1]=(Math.random()-0.5)*2000; positions[i*3+2]=(Math.random()-0.5)*2000; }
-      starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      starGeo.setDrawRange(0,0);
-      const sprite=new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/spark1.png');
-      starMat=new THREE.PointsMaterial({ map:sprite, size:1.5, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.3 });
-      stars=new THREE.Points(starGeo, starMat);
+      starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3)); starGeo.setDrawRange(0,0);
+      const sprite = new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/spark1.png');
+      starMat = new THREE.PointsMaterial({ map:sprite, size:1.5, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.2 });
+      stars = new THREE.Points(starGeo, starMat);
       scene.add(stars);
     }
     function updateStarfield(reach) {
-      const ratio=Math.min(reach/150000,1);
-      const eff=0.1+Math.sqrt(ratio)*0.9;
-      starGeo.setDrawRange(0,Math.floor(STAR_COUNT*eff));
-      starMat.opacity=0.2+0.5*ratio;
-      starMat.size=1+4*ratio;
+      const ratio = Math.min(reach/150000,1);
+      // 선형 매핑으로 저수치도 반응 극대화
+      const eff = 0.1 + ratio * 0.9;
+      starGeo.setDrawRange(0,Math.floor(STAR_COUNT * eff));
+      starMat.opacity = 0.2 + 0.6 * ratio;
+      starMat.size    = 1 + 4 * ratio;
     }
     function animateStarfield(){ stars.rotation.y+=0.0003; renderer.render(scene,camera); requestAnimationFrame(animateStarfield);}  
   </script>
 
   <!-- Arc Canvas -->
   <script>
-    const canvas=document.getElementById('arc-canvas'); const ctx=canvas.getContext('2d'); let targetProgress=0, currentProgress=0, orbRot=0;
-    window.addEventListener('resize',()=>{ canvas.width=window.innerWidth; canvas.height=window.innerHeight; });
-    canvas.width=window.innerWidth; canvas.height=window.innerHeight;
-    function updateGraphic(reach){ const r=Math.min(reach/150000,1); const sigma=1/(1+Math.exp(-10*(r-0.5))); targetProgress=0.1+sigma*0.8; updateStarfield(reach);}    
-    function drawArc(){ ctx.clearRect(0,0,canvas.width,canvas.height); currentProgress+=(targetProgress-currentProgress)*0.05; const cx=canvas.width/2, cy=canvas.height/2, rad=canvas.width*0.85;
+    const canvas = document.getElementById('arc-canvas'), ctx = canvas.getContext('2d');
+    let targetProgress=0, currentProgress=0, orbRot=0;
+    function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+    window.addEventListener('resize',resize); resize();
+    function updateGraphic(reach){ const r=Math.min(reach/150000,1); const sigma=1/(1+Math.exp(-8*(r-0.4))); targetProgress=0.1+sigma*0.8; updateStarfield(reach); }
+    function drawArc(){ ctx.clearRect(0,0,canvas.width,canvas.height); currentProgress+=(targetProgress-currentProgress)*0.07; const cx=canvas.width/2, cy=canvas.height/2, rad=canvas.width*0.85;
       if(currentProgress>0.02){ const s=Math.PI*1.2, e=s+Math.PI*0.6*currentProgress; const g=ctx.createLinearGradient(cx-rad,cy,cx+rad,cy); g.addColorStop(0,'#60a5fa'); g.addColorStop(0.5,'#f472b6'); g.addColorStop(1,'#fb923c'); ctx.beginPath(); ctx.arc(cx,canvas.height*0.85,rad,s,e); ctx.strokeStyle=g; ctx.lineWidth=8; ctx.lineCap='round'; ctx.shadowBlur=20; ctx.shadowColor='rgba(255,255,255,0.3)'; ctx.stroke(); ctx.shadowBlur=0; }
       if(currentProgress>0.02){ const s=Math.PI*0.2, e=s+Math.PI*0.6*currentProgress; const g=ctx.createLinearGradient(cx-rad,cy,cx+rad,cy); g.addColorStop(0,'#fb923c'); g.addColorStop(0.5,'#f472b6'); g.addColorStop(1,'#60a5fa'); ctx.beginPath(); ctx.arc(cx,canvas.height*0.15,rad,s,e); ctx.strokeStyle=g; ctx.lineWidth=8; ctx.lineCap='round'; ctx.shadowBlur=20; ctx.shadowColor='rgba(255,255,255,0.3)'; ctx.stroke(); ctx.shadowBlur=0; }
-      orbRot+=0.015; const ox=cx+Math.cos(orbRot)*50, oy=canvas.height*0.2+Math.sin(orbRot*2)*6; const og=ctx.createRadialGradient(ox,oy,5,ox,oy,25); og.addColorStop(0,'#f87171'); og.addColorStop(1,'#60a5fa'); ctx.beginPath(); ctx.arc(ox,oy,15,0,Math.PI*2); ctx.fillStyle=og; ctx.fill(); requestAnimationFrame(drawArc);
-    }
+      orbRot+=0.015; const ox=cx+Math.cos(orbRot)*50, oy=canvas.height*0.2+Math.sin(orbRot*2)*6; const og=ctx.createRadialGradient(ox,oy,5,ox,oy,25); og.addColorStop(0,'#f87171'); og.addColorStop(1,'#60a5fa'); ctx.beginPath(); ctx.arc(ox,oy,15,0,Math.PI*2); ctx.fillStyle=og; ctx.fill(); requestAnimationFrame(drawArc); }
     drawArc();
   </script>
 
@@ -120,11 +115,7 @@
   <script>
     document.addEventListener('DOMContentLoaded',()=>{
       const productsData={ '블로그 리뷰':[{id:'blog-1',name:'단일 리뷰 포스트',price:150000,reach:1200},{id:'blog-3',name:'3개 묶음 리뷰',price:400000,reach:3500},{id:'blog-5',name:'5개 묶음 리뷰',price:600000,reach:6000}], '인스타 이미지':[{id:'insta-static',name:'정적 이미지 포스트',price:200000,reach:30000},{id:'insta-story',name:'스토리 광고(5회)',price:250000,reach:40000},{id:'insta-reels',name:'Reels 숏폼 광고',price:500000,reach:80000}], '페이스북':[{id:'fb-cpm',name:'피드 CPM 캠페인',price:300000,reach:50000},{id:'fb-cpc',name:'동영상 CPM 캠페인',price:450000,reach:70000},{id:'fb-lead',name:'리드 폼 광고',price:500000,reach:60000}], '유튜브':[{id:'yt-bumper',name:'6초 Bumper 광고',price:500000,reach:80000},{id:'yt-skippable',name:'스킵 가능 프리롤',price:900000,reach:150000},{id:'yt-noskip',name:'스킵 불가 프리롤',price:1100000,reach:120000}] };
-      const cart={}; const acc=document.getElementById('accordion-container'); const totalReachEl=document.getElementById('total-reach'); const totalPriceEl=document.getElementById('total-price'); const submitBtn=document.getElementById('submit-campaign-btn');
-      function renderAccordion(){ let html=''; for(let cat in productsData){ html+=`<div class="accordion-item"><div class="accordion-header"><span>${cat}</span><svg class="w-5 h-5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></div><div class="accordion-content">`; productsData[cat].forEach(item=>{ const q=cart[item.id]||0; html+=`<div class="option"><div class="option-info"><p>${item.name}</p><span>${item.reach.toLocaleString()} 도달</span></div><div class="option-controls"><button data-id="${item.id}">−</button><span>${q}</span><button data-id="${item.id}">＋</button></div></div>`; }); html+='</div></div>'; } acc.innerHTML=html; attachListeners();}
-      function attachListeners(){ document.querySelectorAll('.accordion-header').forEach(h=>h.addEventListener('click',()=>{ const c=h.nextElementSibling,i=h.querySelector('svg'); document.querySelectorAll('.accordion-content.open').forEach(o=>{if(o!==c){o.classList.remove('open');o.previousElementSibling.querySelector('svg').classList.remove('rotate-180');}}); c.classList.toggle('open'); i.classList.toggle('rotate-180'); })); document.querySelectorAll('.option-controls button').forEach(b=>b.addEventListener('click',e=>{ e.stopPropagation(); const id=b.dataset.id; if(b.textContent==='＋') cart[id]=(cart[id]||0)+1; else if(cart[id]>0){ cart[id]--; if(!cart[id]) delete cart[id]; } b.parentElement.querySelector('span').textContent=cart[id]||0; let totalPrice=0, totalReach=0; for(let k in cart){ const it=Object.values(productsData).flat().find(x=>x.id===k); totalPrice+=it.price*cart[k]; totalReach+=it.reach*cart[k]; } totalPriceEl.textContent=`${totalPrice.toLocaleString()}원`; submitBtn.disabled=totalPrice===0; updateGraphic(totalReach); })); }
-      renderAccordion();
-    });
-  </script>
-</body>
-</html>
+      const cart={}, acc=document.getElementById('accordion-container'), totalReachEl=document.getElementById('total-reach'), totalPriceEl=document.getElementById('total-price'), submitBtn=document.getElementById('submit-campaign-btn');
+      let raf;
+      function animateReach(end){ const start=parseInt(totalReachEl.textContent.replace(/,/g,''))||0; if(start===end)return; const dur=600; let st; function step(ts){ if(!st)st=ts; const p=Math.min((ts-st)/dur,1); totalReachEl.textContent=Math.floor(p*(end-start)+start).toLocaleString(); if(p<1)raf=requestAnimationFrame(step);} cancelAnimationFrame(raf); raf=requestAnimationFrame(step); }
+      function renderAccordion(){ let html=''; for(let cat in productsData){ html+=`<div class='accordion-item'><div class='accordion-header'><span>${cat}</span><svg class='w-5 h-5 transition-transform' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round'
