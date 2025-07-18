@@ -3,109 +3,49 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>캠페인 빌더 v40.1</title>
-  <!-- Tailwind CSS -->
+  <title>캠페인 빌더 v40.2 (카테고리 팝업 & 반응도 개선)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      width: 100%; height: 100%;
-      background: #0d0c12;
-      font-family: 'Inter', sans-serif;
-      overflow: hidden;
-    }
-    #three-container, #arc-canvas {
-      position: fixed; top: 0; left: 0;
-      width: 100%; height: 100%;
-    }
-    #three-container { z-index: 0; }
-    #arc-canvas { z-index: 1; }
-    .ui-container {
-      position: relative; z-index: 2;
-      max-width: 400px; margin: 0 auto;
-      height: 100%; display: flex; flex-direction: column;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-    /* hide scrollbar but allow scroll */
-    .ui-container::-webkit-scrollbar { display: none; }
-    main {
-      flex: 1;
-      display: flex; align-items: center; justify-content: center;
-      padding: 1rem;
-    }
-    .heading {
-      text-align: center;
-    }
-    .heading p:first-child { color: #9ca3af; }
-    .heading p:last-child { font-size: 3rem; font-weight: 800; color: #fff; }
-    section.metrics {
-      padding: 1rem;
-      color: #e5e7eb;
-    }
-    section.metrics h2 { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; color: #fff; }
-    section.metrics ul { list-style: disc inside; font-size: 0.875rem; line-height: 1.5; }
-    section.services {
-      padding: 1rem;
-    }
-    .services-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1rem;
-    }
-    .service-card {
-      background: #1f2937;
-      border-radius: 0.5rem;
-      padding: 1rem;
-      color: #e5e7eb;
-    }
-    .service-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem; }
-    .service-card p { font-size: 0.875rem; color: #9ca3af; margin-bottom: 0.5rem; }
-    .service-controls {
-      display: flex; align-items: center; gap: 0.5rem;
-    }
-    .service-controls button {
-      background: #374151; color: #fff;
-      width: 2rem; height: 2rem;
-      border-radius: 0.375rem;
-      font-size: 1.25rem; line-height: 1;
-    }
-    .service-controls input {
-      width: 3rem; text-align: center;
-      background: #111827; color: #fff;
-      border: none;
-      font-size: 1rem;
-    }
-    footer {
-      padding: 1rem;
-    }
-    .total {
-      display: flex; justify-content: space-between;
-      color: #9ca3af; margin-bottom: 0.5rem;
-      font-size: 0.875rem;
-    }
-    .total .amount {
-      color: #fff; font-size: 1.25rem; font-weight: 600;
-    }
-    .btn {
-      width: 100%; padding: 0.75rem;
-      background: #2563eb; color: #fff;
-      font-weight: 600; border: none;
-      border-radius: 0.5rem;
-    }
+    body, html { margin:0; padding:0; width:100%; height:100%; background:#0d0c12; font-family:'Inter',sans-serif; overflow:hidden; }
+    #three-container, #arc-canvas { position:fixed; top:0; left:0; width:100%; height:100%; }
+    #three-container { z-index:0; }
+    #arc-canvas { z-index:1; }
+    .ui-container { position:relative; z-index:2; max-width:400px; margin:0 auto; height:100%; display:flex; flex-direction:column; overflow-y:auto; }
+    .ui-container::-webkit-scrollbar { display:none; }
+    main { flex:1; display:flex; align-items:center; justify-content:center; padding:1rem; }
+    .heading { text-align:center; }
+    .heading .label { color:#9ca3af; }
+    .heading .value { font-size:3rem; font-weight:800; color:#fff; }
+    section.metrics { padding:1rem; color:#e5e7eb; }
+    section.metrics h2 { font-size:1.125rem; font-weight:600; margin-bottom:0.5rem; color:#fff; }
+    section.metrics ul { list-style:disc inside; font-size:0.875rem; line-height:1.5; }
+    section.services { padding:1rem; }
+    .accordion-item { margin-bottom:1rem; background:#1f2937; border-radius:0.5rem; overflow:hidden; }
+    .accordion-header { display:flex; justify-content:space-between; align-items:center; padding:0.75rem; color:#e5e7eb; cursor:pointer; }
+    .accordion-header svg { transition:transform .3s; }
+    .accordion-content { max-height:0; overflow:hidden; transition:max-height .3s ease; padding:0 1rem; }
+    .accordion-content.open { padding:0.5rem 1rem; max-height:500px; }
+    .services-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; }
+    .service-card { background:#374151; padding:0.75rem; border-radius:0.5rem; color:#e5e7eb; }
+    .service-card h3 { font-size:0.95rem; font-weight:600; margin-bottom:0.25rem; }
+    .service-card p { font-size:0.8rem; color:#9ca3af; margin-bottom:0.5rem; }
+    .service-controls { display:flex; align-items:center; gap:0.25rem; }
+    .service-controls button { background:#4b5563; color:#fff; width:1.75rem; height:1.75rem; border-radius:0.375rem; font-size:1.25rem; }
+    .service-controls input { width:2rem; text-align:center; background:#111827; color:#fff; border:none; font-size:1rem; }
+    footer { padding:1rem; }
+    .total { display:flex; justify-content:space-between; color:#9ca3af; margin-bottom:0.5rem; font-size:0.875rem; }
+    .total .amount { color:#fff; font-size:1.25rem; font-weight:600; }
+    .btn { width:100%; padding:0.75rem; background:#2563eb; color:#fff; font-weight:600; border:none; border-radius:0.5rem; }
   </style>
 </head>
 <body>
   <div id="three-container"></div>
   <canvas id="arc-canvas"></canvas>
   <div class="ui-container">
-    <main>
-      <div class="heading">
-        <p>예상 도달</p>
-        <p id="total-reach">0</p>
-      </div>
+    <main class="heading">
+      <p class="label">예상 도달</p>
+      <p id="total-reach" class="value">0</p>
     </main>
     <section class="metrics">
       <h2>전환 퍼널 & 비용</h2>
@@ -118,13 +58,11 @@
     </section>
     <section class="services">
       <h2>서비스 선택</h2>
-      <div class="services-grid" id="service-cards"></div>
+      <!-- Accordion by category -->
+      <div id="service-accordion"></div>
     </section>
     <footer>
-      <div class="total">
-        <span>총 합계 (VAT 별도)</span>
-        <span class="amount" id="total-price">0원</span>
-      </div>
+      <div class="total"><span>총 합계 (VAT 별도)</span><span id="total-price" class="amount">0원</span></div>
       <button id="submit-campaign-btn" class="btn" disabled>캠페인 신청하기</button>
     </footer>
   </div>
@@ -136,138 +74,73 @@
     const STAR_COUNT = 30000;
     initStarfield(); animateStarfield();
     function initStarfield(){
-      scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 1, 2000);
-      camera.position.z = 200;
-      renderer = new THREE.WebGLRenderer({ alpha:true, antialias:true });
-      renderer.setSize(innerWidth, innerHeight);
-      renderer.setPixelRatio(devicePixelRatio);
+      scene=new THREE.Scene(); camera=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,1,2000); camera.position.z=200;
+      renderer=new THREE.WebGLRenderer({alpha:true,antialias:true}); renderer.setSize(window.innerWidth,window.innerHeight); renderer.setPixelRatio(window.devicePixelRatio);
       document.getElementById('three-container').appendChild(renderer.domElement);
-      window.addEventListener('resize',()=>{
-        camera.aspect = innerWidth/innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(innerWidth, innerHeight);
-      });
-      starGeo = new THREE.BufferGeometry();
-      const pos = new Float32Array(STAR_COUNT*3);
-      for(let i=0;i<STAR_COUNT;i++){
-        pos[i*3]   = (Math.random()-0.5)*2000;
-        pos[i*3+1] = (Math.random()-0.5)*2000;
-        pos[i*3+2] = (Math.random()-0.5)*2000;
-      }
-      starGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
-      starGeo.setDrawRange(0,0);
-      const sprite = new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/spark1.png');
-      starMat = new THREE.PointsMaterial({ map:sprite, size:1.5, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.2 });
-      stars = new THREE.Points(starGeo, starMat);
-      scene.add(stars);
+      window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+      starGeo=new THREE.BufferGeometry();const pos=new Float32Array(STAR_COUNT*3);
+      for(let i=0;i<STAR_COUNT;i++){pos[i*3]=(Math.random()-0.5)*2000;pos[i*3+1]=(Math.random()-0.5)*2000;pos[i*3+2]=(Math.random()-0.5)*2000;}
+      starGeo.setAttribute('position',new THREE.BufferAttribute(pos,3));starGeo.setDrawRange(0,0);
+      const sprite=new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/spark1.png');
+      starMat=new THREE.PointsMaterial({map:sprite,size:1.5,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0.2});
+      stars=new THREE.Points(starGeo,starMat);scene.add(stars);
     }
-    function updateStarfield(reach){
-      const ratio = Math.min(reach/150000,1);
-      const eff = 0.1 + ratio*0.9;
-      starGeo.setDrawRange(0, Math.floor(STAR_COUNT*eff));
-      starMat.opacity = 0.2 + 0.6*ratio;
-      starMat.size = 1 + 4*ratio;
-    }
-    function animateStarfield(){
-      stars.rotation.y += 0.0003;
-      renderer.render(scene, camera);
-      requestAnimationFrame(animateStarfield);
-    }
+    function updateStarfield(reach){const r=Math.min(reach/150000,1);const eff=0.1+Math.sqrt(r)*0.9;starGeo.setDrawRange(0,Math.floor(STAR_COUNT*eff));starMat.opacity=0.2+0.6*r;starMat.size=1+4*r;}
+    function animateStarfield(){stars.rotation.y+=0.0005;renderer.render(scene,camera);requestAnimationFrame(animateStarfield);}
   </script>
 
   <!-- Arc Canvas -->
   <script>
-    const canvas = document.getElementById('arc-canvas'), ctx = canvas.getContext('2d');
-    let targetProgress=0, currentProgress=0, orbRot=0;
-    function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
-    window.addEventListener('resize',resize); resize();
-    function updateGraphic(reach){
-      const r = Math.min(reach/150000,1);
-      const sigma = 1/(1+Math.exp(-8*(r-0.4)));
-      targetProgress = 0.1 + sigma*0.8;
-      updateStarfield(reach);
-    }
-    function drawArc(){
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      currentProgress += (targetProgress-currentProgress)*0.07;
-      const cx=canvas.width/2, cy=canvas.height/2, rad=canvas.width*0.85;
-      if(currentProgress>0.02){
-        const s=Math.PI*1.2, e=s+Math.PI*0.6*currentProgress;
-        const g=ctx.createLinearGradient(cx-rad,cy,cx+rad,cy);
-        g.addColorStop(0,'#60a5fa'); g.addColorStop(0.5,'#f472b6'); g.addColorStop(1,'#fb923c');
-        ctx.beginPath(); ctx.arc(cx,canvas.height*0.85,rad,s,e);
-        ctx.strokeStyle=g; ctx.lineWidth=8; ctx.lineCap='round'; ctx.shadowBlur=20; ctx.shadowColor='rgba(255,255,255,0.3)'; ctx.stroke(); ctx.shadowBlur=0;
-      }
-      if(currentProgress>0.02){
-        const s=Math.PI*0.2, e=s+Math.PI*0.6*currentProgress;
-        const g=ctx.createLinearGradient(cx-rad,cy,cx+rad,cy);
-        g.addColorStop(0,'#fb923c'); g.addColorStop(0.5,'#f472b6'); g.addColorStop(1,'#60a5fa');
-        ctx.beginPath(); ctx.arc(cx,canvas.height*0.15,rad,s,e);
-        ctx.strokeStyle=g; ctx.lineWidth=8; ctx.lineCap='round'; ctx.shadowBlur=20; ctx.shadowColor='rgba(255,255,255,0.3)'; ctx.stroke(); ctx.shadowBlur=0;
-      }
-      orbRot += 0.015; const ox = cx + Math.cos(orbRot)*50, oy = canvas.height*0.2 + Math.sin(orbRot*2)*6;
-      const og = ctx.createRadialGradient(ox,oy,5,ox,oy,25);
-      og.addColorStop(0,'#f87171'); og.addColorStop(1,'#60a5fa');
-      ctx.beginPath(); ctx.arc(ox,oy,15,0,Math.PI*2); ctx.fillStyle=og; ctx.fill();
-      requestAnimationFrame(drawArc);
-    }
-    drawArc();
+    const canvas=document.getElementById('arc-canvas'),ctx=canvas.getContext('2d');let targetProgress=0,currentProgress=0,orbRot=0;
+    function resize(){canvas.width=innerWidth;canvas.height=innerHeight;}window.addEventListener('resize',resize);resize();
+    function updateGraphic(reach){const r=Math.min(reach/150000,1);const sigma=1/(1+Math.exp(-8*(r-0.4)));targetProgress=0.1+sigma*0.8;updateStarfield(reach);}
+    function drawArc(){ctx.clearRect(0,0,canvas.width,canvas.height);currentProgress+=(targetProgress-currentProgress)*0.07;const cx=canvas.width/2,cy=canvas.height/2,rad=canvas.width*0.85;
+      if(currentProgress>0.02){const s=Math.PI*1.2,e=s+Math.PI*0.6*currentProgress,g=ctx.createLinearGradient(cx-rad,cy,cx+rad,cy);g.addColorStop(0,'#60a5fa');g.addColorStop(0.5,'#f472b6');g.addColorStop(1,'#fb923c');ctx.beginPath();ctx.arc(cx,canvas.height*0.85,rad,s,e);ctx.strokeStyle=g;ctx.lineWidth=8;ctx.lineCap='round';ctx.shadowBlur=20;ctx.shadowColor='rgba(255,255,255,0.3)';ctx.stroke();ctx.shadowBlur=0;}
+      if(currentProgress>0.02){const s=Math.PI*0.2,e=s+Math.PI*0.6*currentProgress,g=ctx.createLinearGradient(cx-rad,cy,cx+rad,cy);g.addColorStop(0,'#fb923c');g.addColorStop(0.5,'#f472b6');g.addColorStop(1,'#60a5fa');ctx.beginPath();ctx.arc(cx,canvas.height*0.15,rad,s,e);ctx.strokeStyle=g;ctx.lineWidth=8;ctx.lineCap='round';ctx.shadowBlur=20;ctx.shadowColor='rgba(255,255,255,0.3)';ctx.stroke();ctx.shadowBlur=0;}
+      orbRot+=0.015;const ox=cx+Math.cos(orbRot)*50,oy=canvas.height*0.2+Math.sin(orbRot*2)*6,og=ctx.createRadialGradient(ox,oy,5,ox,oy,25);og.addColorStop(0,'#f87171');og.addColorStop(1,'#60a5fa');ctx.beginPath();ctx.arc(ox,oy,15,0,Math.PI*2);ctx.fillStyle=og;ctx.fill();requestAnimationFrame(drawArc);}drawArc();
   </script>
 
   <!-- Campaign Builder Logic -->
   <script>
     document.addEventListener('DOMContentLoaded',()=>{
-      const productsData=[
-        {category:'블로그 리뷰',id:'blog-1',name:'단일 리뷰 포스트',price:150000,reach:1200},
-        {category:'블로그 리뷰',id:'blog-3',name:'3개 묶음 리뷰',price:400000,reach:3500},
-        {category:'블로그 리뷰',id:'blog-5',name:'5개 묶음 리뷰',price:600000,reach:6000},
-        {category:'인스타 이미지',id:'insta-static',name:'정적 이미지 포스트',price:200000,reach:30000},
-        {category:'인스타 이미지',id:'insta-story',name:'스토리 광고(5회)',price:250000,reach:40000},
-        {category:'인스타 이미지',id:'insta-reels',name:'Reels 숏폼 광고',price:500000,reach:80000},
-        {category:'페이스북',id:'fb-cpm',name:'피드 CPM 캠페인',price:300000,reach:50000},
-        {category:'페이스북',id:'fb-cpc',name:'동영상 CPM 캠페인',price:450000,reach:70000},
-        {category:'페이스북',id:'fb-lead',name:'리드 폼 광고',price:500000,reach:60000},
-        {category:'유튜브',id:'yt-bumper',name:'6초 Bumper 광고',price:500000,reach:80000},
-        {category:'유튜브',id:'yt-skippable',name:'스킵 가능 프리롤',price:900000,reach:150000},
-        {category:'유튜브',id:'yt-noskip',name:'스킵 불가 프리롤',price:1100000,reach:120000}
+      const products=[
+        {cat:'블로그 리뷰',id:'blog-1',name:'단일 리뷰 포스트',price:150000,reach:1200},
+        {cat:'블로그 리뷰',id:'blog-3',name:'3개 묶음 리뷰',price:400000,reach:3500},
+        {cat:'블로그 리뷰',id:'blog-5',name:'5개 묶음 리뷰',price:600000,reach:6000},
+        {cat:'인스타 이미지',id:'insta-static',name:'정적 이미지 포스트',price:200000,reach:30000},
+        {cat:'인스타 이미지',id:'insta-story',name:'스토리 광고(5회)',price:250000,reach:40000},
+        {cat:'인스타 이미지',id:'insta-reels',name:'Reels 숏폼 광고',price:500000,reach:80000},
+        {cat:'페이스북',id:'fb-cpm',name:'피드 CPM 캠페인',price:300000,reach:50000},
+        {cat:'페이스북',id:'fb-cpc',name:'동영상 CPM 캠페인',price:450000,reach:70000},
+        {cat:'페이스북',id:'fb-lead',name:'리드 폼 광고',price:500000,reach:60000},
+        {cat:'유튜브',id:'yt-bumper',name:'6초 Bumper 광고',price:500000,reach:80000},
+        {cat:'유튜브',id:'yt-skippable',name:'스킵 가능 프리롤',price:900000,reach:150000},
+        {cat:'유튜브',id:'yt-noskip',name:'스킵 불가 프리롤',price:1100000,reach:120000}
       ];
-      const cart={};
-      const container=document.getElementById('service-cards');
-      const totalReachEl=document.getElementById('total-reach');
-      const totalPriceEl=document.getElementById('total-price');
-      const submitBtn=document.getElementById('submit-campaign-btn');
-
-      // 카드 생성
-      productsData.forEach(item=>{
-        const card=document.createElement('div'); card.className='service-card';
-        card.innerHTML=`<h3>${item.name}</h3><p>1명 당 ${item.reach.toLocaleString()}회 도달<br>${item.price.toLocaleString()}원</p>
-          <div class="service-controls">
-            <button data-id="${item.id}" class="decrease">-</button>
-            <input type="number" min="0" value="0" data-id="${item.id}" class="quantity" />
-            <button data-id="${item.id}" class="increase">+</button>
-          </div>`;
-        container.appendChild(card);
+      const cart={}, acc=document.getElementById('service-accordion'), totalReachEl=document.getElementById('total-reach'), totalPriceEl=document.getElementById('total-price'), submit=document.getElementById('submit-campaign-btn');
+      // 카테고리 그룹 생성
+      const cats=[...new Set(products.map(p=>p.cat))];
+      cats.forEach(cat=>{
+        const item=document.createElement('div');item.className='accordion-item';
+        item.innerHTML=`<div class='accordion-header'><span>${cat}</span><svg class='w-5 h-5 transition-transform' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/></svg></div><div class='accordion-content'><div class='services-grid'></div></div>`;
+        acc.appendChild(item);
       });
-
+      // 각 카테고리에 카드
+      products.forEach(p=>{
+        const content=document.querySelector(`.accordion-content:nth-child(${cats.indexOf(p.cat)+1}) .services-grid`);
+        const card=document.createElement('div');card.className='service-card';
+        card.innerHTML=`<h3>${p.name}</h3><p>1명 당 ${p.reach.toLocaleString()}회 도달<br>${p.price.toLocaleString()}원</p><div class='service-controls'><button data-id='${p.id}' class='decrease'>-</button><input type='number' min='0' value='0' data-id='${p.id}' class='quantity'/><button data-id='${p.id}' class='increase'>+</button></div>`;
+        content.querySelector('.services-grid').appendChild(card);
+      });
       // 이벤트
-      document.querySelectorAll('.decrease').forEach(btn=>btn.addEventListener('click',()=>changeQty(btn.dataset.id,-1)));
-      document.querySelectorAll('.increase').forEach(btn=>btn.addEventListener('click',()=>changeQty(btn.dataset.id,1)));
-      document.querySelectorAll('.quantity').forEach(inp=>inp.addEventListener('input',()=>setQty(inp.dataset.id,parseInt(inp.value)||0)));
-
+      document.querySelectorAll('.accordion-header').forEach(h=>h.addEventListener('click',()=>{const c=h.nextElementSibling,i=h.querySelector('svg');document.querySelectorAll('.accordion-content.open').forEach(o=>{if(o!==c){o.classList.remove('open');o.previousElementSibling.querySelector('svg').classList.remove('rotate-180');}});c.classList.toggle('open');i.classList.toggle('rotate-180');}));
+      document.querySelectorAll('.decrease').forEach(b=>b.addEventListener('click',()=>chg(b.dataset.id,-1)));
+      document.querySelectorAll('.increase').forEach(b=>b.addEventListener('click',()=>chg(b.dataset.id,1)));
+      document.querySelectorAll('.quantity').forEach(i=>i.addEventListener('input',()=>setQty(i.dataset.id,parseInt(i.value)||0)));
       let raf;
-      function changeQty(id,delta){ setQty(id, (cart[id]||0) + delta); }
-      function setQty(id,qty){ cart[id] = Math.max(qty,0); document.querySelector(`.quantity[data-id='${id}']`).value = cart[id]; calculate(); }
-      function calculate(){ let totalPrice=0,totalReach=0;
-        for(let id in cart){ const it=productsData.find(x=>x.id===id); totalPrice+=it.price*cart[id]; totalReach+=it.reach*cart[id]; }
-        totalPriceEl.textContent=`${totalPrice.toLocaleString()}원`; submitBtn.disabled=totalPrice===0;
-        // 숫자 애니메이션
-        const start=parseInt(totalReachEl.textContent.replace(/,/g,''))||0;
-        const end=totalReach; let st; cancelAnimationFrame(raf);
-        function step(ts){ if(!st)st=ts; const p=Math.min((ts-st)/600,1); totalReachEl.textContent=Math.floor(p*(end-start)+start).toLocaleString(); if(p<1)raf=requestAnimationFrame(step); }
-        raf=requestAnimationFrame(step);
-        updateGraphic(totalReach);
-      }
+      function chg(id,delta){setQty(id,(cart[id]||0)+delta);}
+      function setQty(id,qty){cart[id]=Math.max(qty,0);document.querySelector(`.quantity[data-id='${id}']`).value=cart[id];calc();}
+      function calc(){let tp=0,tr=0;for(let id in cart){const it=products.find(x=>x.id===id);tp+=it.price*cart[id];tr+=it.reach*cart[id];}totalPriceEl.textContent=`${tp.toLocaleString()}원`;submit.disabled=tp===0;const start=parseInt(totalReachEl.textContent.replace(/,/g,''))||0;const end=tr;cancelAnimationFrame(raf);let st;function step(ts){if(!st)st=ts;const p=Math.min((ts-st)/600,1);totalReachEl.textContent=Math.floor(p*(end-start)+start).toLocaleString();if(p<1)raf=requestAnimationFrame(step);}raf=requestAnimationFrame(step);updateGraphic(tr);}  
     });
   </script>
 </body>
